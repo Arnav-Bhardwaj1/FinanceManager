@@ -7,7 +7,7 @@ const generateToken = (user) => {
   return jwt.sign(
     { id: user._id, email: user.email },
     JWT_SECRET,
-    { expiresIn: '24h' }
+    { expiresIn: '15d' }
   );
 };
 
@@ -99,7 +99,7 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       { id: user._id },
       JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '15d' }
     );
 
     // Send response
