@@ -24,7 +24,7 @@ export const SavingsProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await axios.get(
-        'http://localhost:5000/api/savings-goals',
+        'https://localhost:5000/api/savings-goals',
         getAuthHeader()
       );
       setGoals(response.data);
@@ -49,7 +49,7 @@ export const SavingsProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await axios.post(
-        'http://localhost:5000/api/savings-goals',
+        'https://localhost:5000/api/savings-goals',
         goalData,
         getAuthHeader()
       );
@@ -69,7 +69,7 @@ export const SavingsProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/savings-goals/${goalId}`,
+        `https://localhost:5000/api/savings-goals/${goalId}`,
         updatedData,
         getAuthHeader()
       );
@@ -91,7 +91,7 @@ export const SavingsProvider = ({ children }) => {
     setLoading(true);
     try {
       await axios.delete(
-        `http://localhost:5000/api/savings-goals/${goalId}`,
+        `https://localhost:5000/api/savings-goals/${goalId}`,
         getAuthHeader()
       );
       setGoals(prevGoals => prevGoals.filter(goal => goal._id !== goalId));
@@ -108,7 +108,7 @@ export const SavingsProvider = ({ children }) => {
   const createSavingsGoal = async (goalData) => {
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/savings-goals', goalData);
+      const response = await axios.post('https://localhost:5000/api/savings-goals', goalData);
       setGoals(prevGoals => [...prevGoals, response.data]);
       setError(null);
       return response.data;
@@ -125,7 +125,7 @@ export const SavingsProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await axios.post(
-        `http://localhost:5000/api/savings-goals/${goalId}/contributions`,
+        `https://localhost:5000/api/savings-goals/${goalId}/contributions`,
         contributionData,
         getAuthHeader()
       );

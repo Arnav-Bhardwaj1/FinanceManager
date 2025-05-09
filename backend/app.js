@@ -18,7 +18,9 @@ app.use('/api/expenses', expenseRoutes);
 app.use('/api/savings-goals', savingsGoalRoutes);
 
 // MongoDB connection
-const MONGODB_URI = 'mongodb://127.0.0.1:27017/financetracker';
+require('dotenv').config();
+const MONGODB_URI = process.env.MONGO_URI;
+const PORT = process.env.PORT || 5000;
 
 // Connect to MongoDB
 mongoose.connect(MONGODB_URI)
