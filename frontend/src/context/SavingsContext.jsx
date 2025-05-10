@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useCallback, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
 const SavingsContext = createContext();
 
@@ -24,7 +25,7 @@ export const SavingsProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await axios.get(
-        'https://localhost:5000/api/savings-goals',
+        `${API_BASE_URL}/api/savings-goals`,
         getAuthHeader()
       );
       setGoals(response.data);
@@ -49,7 +50,7 @@ export const SavingsProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await axios.post(
-        'https://localhost:5000/api/savings-goals',
+        `${API_BASE_URL}/api/savings-goals`,
         goalData,
         getAuthHeader()
       );
@@ -69,7 +70,7 @@ export const SavingsProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await axios.put(
-        `https://localhost:5000/api/savings-goals/${goalId}`,
+        `${API_BASE_URL}/api/savings-goals/${goalId}`,
         updatedData,
         getAuthHeader()
       );
@@ -91,7 +92,7 @@ export const SavingsProvider = ({ children }) => {
     setLoading(true);
     try {
       await axios.delete(
-        `https://localhost:5000/api/savings-goals/${goalId}`,
+        `${API_BASE_URL}/api/savings-goals/${goalId}`,
         getAuthHeader()
       );
       setGoals(prevGoals => prevGoals.filter(goal => goal._id !== goalId));
@@ -108,7 +109,7 @@ export const SavingsProvider = ({ children }) => {
   const createSavingsGoal = async (goalData) => {
     setLoading(true);
     try {
-      const response = await axios.post('https://localhost:5000/api/savings-goals', goalData);
+      const response = await axios.post(`${API_BASE_URL}/api/savings-goals`, goalData);
       setGoals(prevGoals => [...prevGoals, response.data]);
       setError(null);
       return response.data;
@@ -125,7 +126,7 @@ export const SavingsProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await axios.post(
-        `https://localhost:5000/api/savings-goals/${goalId}/contributions`,
+        `${API_BASE_URL}/api/savings-goals/${goalId}/contributions`,
         contributionData,
         getAuthHeader()
       );
