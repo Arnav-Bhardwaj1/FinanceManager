@@ -21,7 +21,7 @@ app.use('/api/expenses', expenseRoutes);
 app.use('/api/savings-goals', savingsGoalRoutes);
 
 // MongoDB connection
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = process.env.MONGO_URI;
 
 // Connect to MongoDB
 mongoose.connect(MONGODB_URI)
