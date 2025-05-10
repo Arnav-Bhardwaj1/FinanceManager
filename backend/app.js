@@ -29,7 +29,7 @@ mongoose.connect(MONGODB_URI)
     console.log('Connected to MongoDB');
     
     // Start server only after MongoDB connection is established
-    const port = process.env.PORT || 5000;
+    const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
