@@ -6,6 +6,9 @@ const expenseRoutes = require('./routes/expenseRoutes');
 const savingsGoalRoutes = require('./routes/savingsGoalRoutes');
 const auth = require('./middleware/auth');
 
+// Load environment variables
+require('dotenv').config();
+
 const app = express();
 
 // Middleware
@@ -18,9 +21,7 @@ app.use('/api/expenses', expenseRoutes);
 app.use('/api/savings-goals', savingsGoalRoutes);
 
 // MongoDB connection
-require('dotenv').config();
-const MONGODB_URI = process.env.MONGO_URI;
-const PORT = process.env.PORT || 5000;
+const MONGODB_URI = process.env.MONGODB_URI;
 
 // Connect to MongoDB
 mongoose.connect(MONGODB_URI)
