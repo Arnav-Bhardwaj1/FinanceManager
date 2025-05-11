@@ -47,8 +47,8 @@ A comprehensive expense management platform built with the MERN stack (MongoDB, 
 
 ```
 finance-tracker/
-├── backend/           # Node.js & Express backend
-├── frontend/          # React frontend
+├── backend/          # Node.js & Express backend
+├── frontend/         # React frontend
 ├── README.md         # Project documentation
-└── .gitignore       # Git ignore file
+└── .gitignore        # Git ignore file
 ```
