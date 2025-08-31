@@ -9,7 +9,7 @@ AI-driven expense management platform built with the MERN stack, featuring an in
 - Create, Read, Update, and Delete (CRUD) Expenses  
 - Savings Goals with progress tracking  
 - Real-time Updates
-- Expense Reports and Interactive Analytics  
+- Expense Reports and Interactive Charts & Graphs  
 - Secure Data Management  
 
 ## Tech Stack  
@@ -50,14 +50,14 @@ AI-driven expense management platform built with the MERN stack, featuring an in
 
 ```
 FinanceManager/
-├── backend/                 # Node.js/Express server
-│   ├── controllers/        # Route controllers
-│   ├── middleware/         # Authentication middleware
+├── backend/               # Node.js/Express server
+│   ├── controllers/       # Route controllers
+│   ├── middleware/        # Authentication middleware
 │   ├── models/            # MongoDB schemas
 │   ├── routes/            # API endpoints
 │   ├── services/          # Business logic
 │   └── server.js          # Main server file
-├── frontend/               # React application
+├── frontend/              # React application
 │   ├── components/        # Reusable UI components
 │   ├── context/           # React context providers
 │   ├── pages/             # Application pages
