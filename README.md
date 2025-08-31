@@ -1,22 +1,25 @@
-# Personal Finance Manager
+# Personal Finance Manager  
 
-A comprehensive expense management platform built with the MERN stack (MongoDB, Express.js, React.js, Node.js).
+AI-driven expense management platform built with the MERN stack, featuring an integrated chatbot for financial insights. The app also provides secure authentication, expense tracking, savings goals tracking, and interactive charts for smarter money management.  
 
-## Features
+## Features  
 
-- User Authentication
-- Create, Read, Update, and Delete Expenses
-- Real-time Updates
-- Expense Reports and Analytics
-- Secure Data Management
+- AI-powered chatbot for financial queries & insights  
+- User Authentication (JWT)  
+- Create, Read, Update, and Delete (CRUD) Expenses  
+- Savings Goals with progress tracking  
+- Real-time Updates with Socket.io  
+- Expense Reports and Interactive Analytics  
+- Secure Data Management  
 
-## Tech Stack
+## Tech Stack  
 
-- Frontend: React.js
-- Backend: Node.js with Express.js
-- Database: MongoDB
-- Authentication: JWT
-- Real-time Updates: Socket.io
+- **Frontend:** React.js  
+- **Backend:** Node.js with Express.js  
+- **Database:** MongoDB  
+- **Authentication:** JWT  
+- **Real-time Updates:** 
+- **AI Integration:** AI Chatbot
 
 ## Setup Instructions
 
@@ -47,8 +50,8 @@ A comprehensive expense management platform built with the MERN stack (MongoDB, 
 
 ```
 finance-tracker/
-├── backend/          # Node.js & Express backend
-├── frontend/         # React.js frontend
-├── README.md         # Project documentation
-└── .gitignore        # Git ignore file
+├── backend/           # Node.js & Express backend
+├── frontend/          # React frontend
+├── README.md         
+└── .gitignore       
 ```
