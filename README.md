@@ -8,7 +8,7 @@ AI-driven expense management platform built with the MERN stack, featuring an in
 - User Authentication (JWT)  
 - Create, Read, Update, and Delete (CRUD) Expenses  
 - Savings Goals with progress tracking  
-- Real-time Updates with Socket.io  
+- Real-time Updates
 - Expense Reports and Interactive Analytics  
 - Secure Data Management  
 
@@ -49,9 +49,19 @@ AI-driven expense management platform built with the MERN stack, featuring an in
 ## Project Structure
 
 ```
-finance-tracker/
-├── backend/           # Node.js & Express backend
-├── frontend/          # React frontend
-├── README.md         
-└── .gitignore       
+FinanceManager/
+├── backend/                 # Node.js/Express server
+│   ├── controllers/        # Route controllers
+│   ├── middleware/         # Authentication middleware
+│   ├── models/            # MongoDB schemas
+│   ├── routes/            # API endpoints
+│   ├── services/          # Business logic
+│   └── server.js          # Main server file
+├── frontend/               # React application
+│   ├── components/        # Reusable UI components
+│   ├── context/           # React context providers
+│   ├── pages/             # Application pages
+│   ├── services/          # API service functions
+│   └── utils/             # Helper functions
+└── README.md     
 ```
