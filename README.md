@@ -1,10 +1,10 @@
 # Personal Finance Manager  
 
-AI-driven expense management platform built with the MERN stack, featuring an integrated chatbot for financial insights. The app also provides secure authentication, expense tracking, savings goals tracking, and interactive charts for smarter money management. 
+AI-driven expense management platform built with the MERN stack, featuring an integrated AI chatbot for financial insights. The app also provides secure authentication, expense tracking, savings goals tracking, and interactive charts for smarter money management. 
 
 ## Live Demo:
 
-**👉 [View Live Application: ](https://finance1manager.netlify.app)**
+**[👉 View Live Application: https://finance1manager.netlify.app](https://finance1manager.netlify.app)**
 
 ## Features
 
