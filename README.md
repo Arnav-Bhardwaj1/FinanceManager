@@ -4,7 +4,7 @@ AI-driven expense management platform built with the MERN stack, featuring an in
 
 ## Live Demo:
 
-**👉 [View Live Application](https://finance1manager.netlify.app)**
+**👉 [View Live Application: ](https://finance1manager.netlify.app)**
 
 ## Features
 
