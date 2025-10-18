@@ -64,7 +64,9 @@ const Login = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%)',
+        background: theme.palette.mode === 'dark' 
+          ? 'linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%)'
+          : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -77,7 +79,9 @@ const Login = () => {
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'radial-gradient(circle at 20% 80%, rgba(33, 150, 243, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(245, 0, 87, 0.1) 0%, transparent 50%)',
+          background: theme.palette.mode === 'dark'
+            ? 'radial-gradient(circle at 20% 80%, rgba(33, 150, 243, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(245, 0, 87, 0.1) 0%, transparent 50%)'
+            : 'radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%)',
           pointerEvents: 'none',
         },
       }}
@@ -89,9 +93,13 @@ const Login = () => {
             sx={{
               p: 6,
               borderRadius: 4,
-              background: 'rgba(30, 30, 30, 0.95)',
+              background: theme.palette.mode === 'dark'
+                ? 'rgba(30, 30, 30, 0.95)'
+                : 'rgba(255, 255, 255, 0.95)',
               backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              border: theme.palette.mode === 'dark'
+                ? '1px solid rgba(255, 255, 255, 0.1)'
+                : '1px solid rgba(255, 255, 255, 0.2)',
               position: 'relative',
               overflow: 'hidden',
               '&::before': {
@@ -124,7 +132,9 @@ const Login = () => {
                 variant="h4"
                 sx={{
                   fontWeight: 700,
-                  background: 'linear-gradient(45deg, #2196f3, #64b5f6)',
+                  background: theme.palette.mode === 'dark'
+                    ? 'linear-gradient(45deg, #2196f3, #64b5f6)'
+                    : 'linear-gradient(45deg, #1976d2, #2196f3)',
                   backgroundClip: 'text',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',

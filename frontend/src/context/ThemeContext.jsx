@@ -8,12 +8,14 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
-  // Always use dark mode - no light mode option
-  const darkMode = true;
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('darkMode');
+    return saved ? JSON.parse(saved) : true; // Default to dark mode
+  });
 
   const theme = createTheme({
     palette: {
-      mode: 'dark',
+      mode: darkMode ? 'dark' : 'light',
       primary: {
         main: '#2196f3',
         light: '#64b5f6',
@@ -25,8 +27,8 @@ export const ThemeProvider = ({ children }) => {
         dark: '#c51162',
       },
       background: {
-        default: '#121212',
-        paper: '#1e1e1e',
+        default: darkMode ? '#121212' : '#f8f9fa',
+        paper: darkMode ? '#1e1e1e' : '#ffffff',
       },
       success: {
         main: '#4caf50',
@@ -52,8 +54,8 @@ export const ThemeProvider = ({ children }) => {
       MuiAppBar: {
         styleOverrides: {
           root: {
-            backgroundColor: '#1e1e1e',
-            color: '#ffffff',
+            backgroundColor: darkMode ? '#1e1e1e' : '#ffffff',
+            color: darkMode ? '#ffffff' : '#000000',
             boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
           },
         },
@@ -106,8 +108,16 @@ export const ThemeProvider = ({ children }) => {
     },
   });
 
+  useEffect(() => {
+    localStorage.setItem('darkMode', JSON.stringify(darkMode));
+  }, [darkMode]);
+
+  const toggleDarkMode = () => {
+    setDarkMode(prev => !prev);
+  };
+
   return (
-    <ThemeContext.Provider value={{ darkMode: true }}>
+    <ThemeContext.Provider value={{ darkMode, toggleDarkMode }}>
       <MuiThemeProvider theme={theme}>
         {children}
       </MuiThemeProvider>
