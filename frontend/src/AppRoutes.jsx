@@ -1,8 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
-import Dashboard from './pages/Dashboard';
+import Analytics from './pages/Analytics';
 import Expenses from './pages/Expenses';
-import Reports from './pages/Reports';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import SavingsGoals from './pages/SavingsGoals';
@@ -25,18 +24,18 @@ const AppRoutes = () => {
     <Routes>
       <Route 
         path="/login" 
-        element={user ? <Navigate to="/dashboard" /> : <Login />} 
+        element={user ? <Navigate to="/analytics" /> : <Login />} 
       />
       <Route 
         path="/register" 
-        element={user ? <Navigate to="/dashboard" /> : <Register />} 
+        element={user ? <Navigate to="/analytics" /> : <Register />} 
       />
       
       <Route
-        path="/dashboard"
+        path="/analytics"
         element={
           <PrivateRoute>
-            <Dashboard />
+            <Analytics />
           </PrivateRoute>
         }
       />
@@ -46,15 +45,6 @@ const AppRoutes = () => {
         element={
           <PrivateRoute>
             <Expenses />
-          </PrivateRoute>
-        }
-      />
-      
-      <Route
-        path="/reports"
-        element={
-          <PrivateRoute>
-            <Reports />
           </PrivateRoute>
         }
       />
@@ -70,7 +60,7 @@ const AppRoutes = () => {
       
       <Route 
         path="/" 
-        element={<Navigate to={user ? "/dashboard" : "/login"} />} 
+        element={<Navigate to={user ? "/analytics" : "/login"} />} 
       />
     </Routes>
   );
