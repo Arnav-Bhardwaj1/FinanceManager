@@ -48,7 +48,7 @@ const Login = () => {
     setIsLoading(true);
     try {
       await login(formData.email, formData.password);
-      navigate('/dashboard');
+      navigate('/analytics');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to login');
     } finally {

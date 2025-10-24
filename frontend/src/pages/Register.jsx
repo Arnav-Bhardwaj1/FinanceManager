@@ -59,7 +59,7 @@ const Register = () => {
 
     try {
       await register(formData.name, formData.email, formData.password);
-      navigate('/dashboard');
+      navigate('/analytics');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to register');
     } finally {
