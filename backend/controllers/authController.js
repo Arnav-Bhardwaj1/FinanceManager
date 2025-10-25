@@ -13,8 +13,25 @@ const generateToken = (user) => {
 
 exports.googleCallback = (req, res) => {
   try {
+    console.log('=== Google OAuth Callback Debug ===');
+    console.log('req.user:', req.user);
+    console.log('req.session:', req.session);
+    console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
+    console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'Set' : 'Not Set');
+    console.log('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? 'Set' : 'Not Set');
+    console.log('MONGO_URI:', process.env.MONGO_URI ? 'Set' : 'Not Set');
+    
+    if (!req.user) {
+      console.error('Google callback - No user found in request');
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      return res.redirect(`${frontendUrl}/login?error=google_auth_failed`);
+    }
+    
     const user = req.user;
+    console.log('User found:', { id: user._id, name: user.name, email: user.email });
+    
     const token = generateToken(user);
+    console.log('Token generated successfully');
     
     const userData = {
       id: user._id,
@@ -28,9 +45,14 @@ exports.googleCallback = (req, res) => {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     const redirectUrl = `${frontendUrl}/auth/google-success?token=${token}&user=${encodeURIComponent(JSON.stringify(userData))}`;
     
+    console.log('Redirecting to:', redirectUrl);
     res.redirect(redirectUrl);
   } catch (error) {
-    console.error('Google callback error:', error);
+    console.error('=== Google OAuth Callback Error ===');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('Full error:', error);
+    
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     res.redirect(`${frontendUrl}/login?error=google_auth_failed`);
   }
