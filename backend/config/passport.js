@@ -34,6 +34,10 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
         existingUser.googleId = profile.id;
         existingUser.provider = 'google';
         existingUser.avatar = profile.photos[0]?.value || '';
+        // Update name if it's empty and we have a display name
+        if (!existingUser.name && profile.displayName) {
+          existingUser.name = profile.displayName;
+        }
         await existingUser.save();
         return done(null, existingUser);
       }
@@ -41,7 +45,7 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
       // Create new user
       const newUser = new User({
         googleId: profile.id,
-        name: profile.displayName,
+        name: profile.displayName || profile.emails[0].value.split('@')[0] || 'Google User',
         email: profile.emails[0].value,
         avatar: profile.photos[0]?.value || '',
         provider: 'google'
