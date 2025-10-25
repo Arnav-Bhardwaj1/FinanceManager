@@ -992,7 +992,19 @@ const Analytics = () => {
                       Days with Expenses:
                     </Typography>
                     <Typography variant="h6" color="primary.main" sx={{ fontWeight: 700 }}>
-                      {stats?.trend?.filter(t => t.amount > 0).length || 0} out of {stats?.trend?.length || 0} days
+                      {stats?.trend?.filter(t => t.amount > 0).length || 0} out of {(() => {
+                        const [year, month] = selectedMonth.split('-');
+                        const now = new Date();
+                        const currentYear = now.getFullYear();
+                        const currentMonth = now.getMonth() + 1;
+                        
+                        // If it's the current month, use current date
+                        if (parseInt(year) === currentYear && parseInt(month) === currentMonth) {
+                          return now.getDate();
+                        }
+                        // Otherwise, use total days in the month
+                        return new Date(year, month, 0).getDate();
+                      })()} days
                     </Typography>
                   </Box>
                   

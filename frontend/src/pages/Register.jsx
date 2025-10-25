@@ -20,6 +20,7 @@ import {
   Visibility,
   VisibilityOff,
   AccountBalanceWallet as WalletIcon,
+  Google as GoogleIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '@mui/material/styles';
@@ -75,15 +76,19 @@ const Register = () => {
     setShowConfirmPassword(!showConfirmPassword);
   };
 
+  const handleGoogleSignIn = () => {
+    window.location.href = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/auth/google`;
+  };
+
   return (
-    <Box
-      sx={{
+      <Box
+        sx={{
         minHeight: '100vh',
         background: theme.palette.mode === 'dark' 
           ? 'linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%)'
           : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        display: 'flex',
-        alignItems: 'center',
+          display: 'flex',
+          alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
         overflow: 'hidden',
@@ -106,7 +111,7 @@ const Register = () => {
           <Paper
             elevation={24}
             sx={{
-              p: 6,
+              p: 4,
               borderRadius: 4,
               background: theme.palette.mode === 'dark'
                 ? 'rgba(30, 30, 30, 0.95)'
@@ -129,21 +134,21 @@ const Register = () => {
             }}
           >
             {/* Header Section */}
-            <Box sx={{ textAlign: 'center', mb: 4 }}>
+            <Box sx={{ textAlign: 'center', mb: 3 }}>
               <Fade in={true} timeout={1200}>
-                <Box sx={{ mb: 3 }}>
+                <Box sx={{ mb: 2 }}>
                   <WalletIcon
                     sx={{
                       fontSize: 64,
                       color: theme.palette.primary.main,
-                      mb: 2,
+                      mb: 1.5,
                       filter: 'drop-shadow(0 4px 8px rgba(33, 150, 243, 0.3))',
                     }}
                   />
                 </Box>
               </Fade>
-              <Typography
-                component="h1"
+          <Typography
+            component="h1"
                 variant="h4"
                 sx={{
                   fontWeight: 700,
@@ -155,9 +160,9 @@ const Register = () => {
                   WebkitTextFillColor: 'transparent',
                   mb: 1,
                 }}
-              >
-                Create Account
-              </Typography>
+          >
+            Create Account
+          </Typography>
               <Typography
                 variant="body1"
                 sx={{
@@ -170,7 +175,7 @@ const Register = () => {
             </Box>
 
             {/* Error Alert */}
-            {error && (
+          {error && (
               <Fade in={!!error} timeout={300}>
                 <Alert 
                   severity="error" 
@@ -182,25 +187,25 @@ const Register = () => {
                     },
                   }}
                 >
-                  {error}
-                </Alert>
+              {error}
+            </Alert>
               </Fade>
-            )}
+          )}
 
             {/* Form */}
-            <form onSubmit={handleSubmit}>
-              <Box sx={{ mb: 3 }}>
-                <TextField
+          <form onSubmit={handleSubmit}>
+              <Box sx={{ mb: 2 }}>
+            <TextField
                   fullWidth
-                  required
-                  id="name"
-                  label="Full Name"
-                  name="name"
+              required
+              id="name"
+              label="Full Name"
+              name="name"
                   type="text"
-                  autoComplete="name"
-                  autoFocus
-                  value={formData.name}
-                  onChange={handleChange}
+              autoComplete="name"
+              autoFocus
+              value={formData.name}
+              onChange={handleChange}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -225,17 +230,17 @@ const Register = () => {
                 />
               </Box>
 
-              <Box sx={{ mb: 3 }}>
-                <TextField
+              <Box sx={{ mb: 2 }}>
+            <TextField
                   fullWidth
-                  required
-                  id="email"
-                  label="Email Address"
-                  name="email"
+              required
+              id="email"
+              label="Email Address"
+              name="email"
                   type="email"
-                  autoComplete="email"
-                  value={formData.email}
-                  onChange={handleChange}
+              autoComplete="email"
+              value={formData.email}
+              onChange={handleChange}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -260,17 +265,17 @@ const Register = () => {
                 />
               </Box>
 
-              <Box sx={{ mb: 3 }}>
-                <TextField
+              <Box sx={{ mb: 2 }}>
+            <TextField
                   fullWidth
-                  required
-                  name="password"
-                  label="Password"
+              required
+              name="password"
+              label="Password"
                   type={showPassword ? 'text' : 'password'}
-                  id="password"
-                  autoComplete="new-password"
-                  value={formData.password}
-                  onChange={handleChange}
+              id="password"
+              autoComplete="new-password"
+              value={formData.password}
+              onChange={handleChange}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -306,17 +311,17 @@ const Register = () => {
                 />
               </Box>
 
-              <Box sx={{ mb: 4 }}>
-                <TextField
+              <Box sx={{ mb: 2.5 }}>
+            <TextField
                   fullWidth
-                  required
-                  name="confirmPassword"
-                  label="Confirm Password"
+              required
+              name="confirmPassword"
+              label="Confirm Password"
                   type={showConfirmPassword ? 'text' : 'password'}
-                  id="confirmPassword"
-                  autoComplete="new-password"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
+              id="confirmPassword"
+              autoComplete="new-password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -352,13 +357,13 @@ const Register = () => {
                 />
               </Box>
 
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
                 disabled={isLoading}
                 sx={{
-                  py: 1.5,
+                  py: 1.2,
                   borderRadius: 2,
                   fontSize: '1.1rem',
                   fontWeight: 600,
@@ -383,11 +388,49 @@ const Register = () => {
                 {isLoading ? 'Creating Account...' : 'Create Account'}
               </Button>
 
-              <Box sx={{ textAlign: 'center', mt: 3 }}>
+              {/* Divider */}
+              <Box sx={{ display: 'flex', alignItems: 'center', my: 1 }}>
+                <Box sx={{ flex: 1, height: 1, bgcolor: 'divider' }} />
+                <Typography variant="body2" sx={{ px: 2, color: 'text.secondary' }}>
+                  OR
+                </Typography>
+                <Box sx={{ flex: 1, height: 1, bgcolor: 'divider' }} />
+              </Box>
+
+              {/* Google Sign-In Button */}
+              <Button
+                fullWidth
+                variant="outlined"
+                onClick={handleGoogleSignIn}
+                startIcon={<GoogleIcon />}
+                sx={{
+                  py: 1.2,
+                  borderRadius: 2,
+                  fontSize: '1.1rem',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.2)',
+                  color: theme.palette.text.primary,
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    borderColor: '#4285f4',
+                    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(66, 133, 244, 0.1)' : 'rgba(66, 133, 244, 0.05)',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 8px 25px rgba(66, 133, 244, 0.2)',
+                  },
+                  '&:active': {
+                    transform: 'translateY(0)',
+                  },
+                }}
+              >
+                Continue with Google
+            </Button>
+
+              <Box sx={{ textAlign: 'center', mt: 2.5 }}>
                 <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 1 }}>
                   Already have an account?
                 </Typography>
-                <Link to="/login" style={{ textDecoration: 'none' }}>
+              <Link to="/login" style={{ textDecoration: 'none' }}>
                   <Typography
                     variant="body2"
                     sx={{
@@ -401,14 +444,14 @@ const Register = () => {
                     }}
                   >
                     Sign In
-                  </Typography>
-                </Link>
-              </Box>
-            </form>
-          </Paper>
+                </Typography>
+              </Link>
+            </Box>
+          </form>
+        </Paper>
         </Slide>
       </Container>
-    </Box>
+      </Box>
   );
 };
 

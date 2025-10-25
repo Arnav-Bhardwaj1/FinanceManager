@@ -6,6 +6,7 @@ const API_URL = `${API_BASE_URL}/api/expenses`;
 // Helper function to get auth header
 const getAuthHeader = () => {
   const token = localStorage.getItem('token');
+  
   return {
     headers: {
       'Authorization': `Bearer ${token}`,

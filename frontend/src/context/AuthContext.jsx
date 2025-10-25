@@ -19,9 +19,11 @@ export const AuthProvider = ({ children }) => {
     const savedUser = localStorage.getItem('user');
     
     if (token && savedUser) {
+      const userData = JSON.parse(savedUser);
+      
       // Set default axios auth header
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setUser(JSON.parse(savedUser));
+      setUser(userData);
     }
     setLoading(false);
   }, []);
@@ -52,10 +54,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (username, email, password) => {
+  const register = async (name, email, password) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/api/auth/register`, {
-        username,
+        name,
         email,
         password,
       });
@@ -88,6 +90,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    setUser,
   };
 
   return (

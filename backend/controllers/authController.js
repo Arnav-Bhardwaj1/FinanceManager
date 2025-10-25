@@ -11,31 +11,54 @@ const generateToken = (user) => {
   );
 };
 
+exports.googleCallback = (req, res) => {
+  try {
+    const user = req.user;
+    const token = generateToken(user);
+    
+    const userData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar || '',
+      provider: user.provider || 'google'
+    };
+    
+    // Redirect to frontend with token
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const redirectUrl = `${frontendUrl}/auth/google-success?token=${token}&user=${encodeURIComponent(JSON.stringify(userData))}`;
+    
+    res.redirect(redirectUrl);
+  } catch (error) {
+    console.error('Google callback error:', error);
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    res.redirect(`${frontendUrl}/login?error=google_auth_failed`);
+  }
+};
+
 exports.register = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { name, email, password } = req.body;
 
     // Validate input
-    if (!username || !email || !password) {
+    if (!name || !email || !password) {
       return res.status(400).json({
         message: 'Please provide all required fields'
       });
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({
-      $or: [{ email }, { username }]
-    });
+    const existingUser = await User.findOne({ email });
 
     if (existingUser) {
       return res.status(400).json({
-        message: 'User with this email or username already exists'
+        message: 'User with this email already exists'
       });
     }
 
     // Create new user
     const user = new User({
-      username,
+      name,
       email,
       password,
     });
@@ -49,7 +72,7 @@ exports.register = async (req, res) => {
       message: 'User registered successfully',
       user: {
         id: user._id,
-        username: user.username,
+        name: user.name,
         email: user.email,
       },
       token,
@@ -106,7 +129,7 @@ exports.login = async (req, res) => {
     res.json({
       user: {
         id: user._id,
-        username: user.username,
+        name: user.name,
         email: user.email,
       },
       token

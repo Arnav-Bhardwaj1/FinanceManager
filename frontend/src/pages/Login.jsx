@@ -19,6 +19,7 @@ import {
   Visibility,
   VisibilityOff,
   AccountBalanceWallet as WalletIcon,
+  Google as GoogleIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '@mui/material/styles';
@@ -58,6 +59,10 @@ const Login = () => {
 
   const handleTogglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  const handleGoogleSignIn = () => {
+    window.location.href = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/auth/google`;
   };
 
   return (
@@ -119,9 +124,9 @@ const Login = () => {
                 <Box sx={{ mb: 3 }}>
                   <WalletIcon
                     sx={{
-                      fontSize: 64,
+                      fontSize: 48,
                       color: theme.palette.primary.main,
-                      mb: 2,
+                      mb: 1.5,
                       filter: 'drop-shadow(0 4px 8px rgba(33, 150, 243, 0.3))',
                     }}
                   />
@@ -287,7 +292,45 @@ const Login = () => {
                 {isLoading ? 'Signing In...' : 'Sign In'}
               </Button>
 
-              <Box sx={{ textAlign: 'center', mt: 3 }}>
+              {/* Divider */}
+              <Box sx={{ display: 'flex', alignItems: 'center', my: 1 }}>
+                <Box sx={{ flex: 1, height: 1, bgcolor: 'divider' }} />
+                <Typography variant="body2" sx={{ px: 2, color: 'text.secondary' }}>
+                  OR
+                </Typography>
+                <Box sx={{ flex: 1, height: 1, bgcolor: 'divider' }} />
+              </Box>
+
+              {/* Google Sign-In Button */}
+              <Button
+                fullWidth
+                variant="outlined"
+                onClick={handleGoogleSignIn}
+                startIcon={<GoogleIcon />}
+                sx={{
+                  py: 1.2,
+                  borderRadius: 2,
+                  fontSize: '1.1rem',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.2)',
+                  color: theme.palette.text.primary,
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    borderColor: '#4285f4',
+                    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(66, 133, 244, 0.1)' : 'rgba(66, 133, 244, 0.05)',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 8px 25px rgba(66, 133, 244, 0.2)',
+                  },
+                  '&:active': {
+                    transform: 'translateY(0)',
+                  },
+                }}
+              >
+                Continue with Google
+              </Button>
+
+              <Box sx={{ textAlign: 'center', mt: 2.5 }}>
                 <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 1 }}>
                   Don't have an account?
                 </Typography>

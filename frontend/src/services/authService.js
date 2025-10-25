@@ -15,10 +15,10 @@ export const login = async (email, password) => {
   }
 };
 
-export const register = async (username, email, password) => {
+export const register = async (name, email, password) => {
   try {
     const response = await axios.post(`${API_URL}/register`, {
-      username,
+      name,
       email,
       password,
     });
@@ -37,6 +37,7 @@ export const getCurrentUser = () => {
 };
 
 export const isAuthenticated = () => {
+  const token = localStorage.getItem('token');
   const user = getCurrentUser();
-  return !!user && !!user.token;
+  return !!(token && user);
 };

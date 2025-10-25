@@ -5,6 +5,7 @@ import Expenses from './pages/Expenses';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import SavingsGoals from './pages/SavingsGoals';
+import GoogleAuthSuccess from './pages/GoogleAuthSuccess';
 import { useAuth } from './context/AuthContext';
 
 const PrivateRoute = ({ children }) => {
@@ -29,6 +30,11 @@ const AppRoutes = () => {
       <Route 
         path="/register" 
         element={user ? <Navigate to="/analytics" /> : <Register />} 
+      />
+      
+      <Route 
+        path="/auth/google-success" 
+        element={<GoogleAuthSuccess />} 
       />
       
       <Route
