@@ -28,6 +28,7 @@ import {
   AccountBalanceWallet as WalletIcon,
   Psychology as AIBrainIcon,
   ChatBubbleOutline as ChatIcon,
+  AccountBalanceWallet,
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -69,6 +70,7 @@ const Layout = ({ children }) => {
   const menuItems = [
     { text: 'Analytics', icon: <Assessment />, path: '/analytics' },
     { text: 'Expenses', icon: <Receipt />, path: '/expenses' },
+    { text: 'Budgets', icon: <AccountBalanceWallet />, path: '/budgets' },
     { text: 'Savings Goals', icon: <Savings />, path: '/savings' },
   ];
 

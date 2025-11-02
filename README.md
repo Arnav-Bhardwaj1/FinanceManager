@@ -1,6 +1,6 @@
 # Finova: Finance & Expense Management Platform
   
-AI-driven expense management platform built with the MERN stack, featuring an integrated AI chatbot for financial insights. The app provides secure authentication, comprehensive expense tracking, savings goals management, and interactive analytics charts for smarter money management.
+AI-driven expense management platform built with the MERN stack, featuring an integrated AI chatbot for financial insights. The app provides secure authentication, comprehensive expense tracking, budget management with email notifications, savings goals management, and interactive analytics charts for smarter money management.
 
 ## Live Demo:
 
@@ -9,14 +9,26 @@ AI-driven expense management platform built with the MERN stack, featuring an in
 ## Key Features
 
 - AI-powered chatbot for financial queries & insights  
-- User Authentication (JWT)  
+- User Authentication (JWT) with Google OAuth support
 - Create, Read, Update, and Delete (CRUD) Expenses  
+- **Budget Management** with category-based monthly budgets
+- **Email Notifications** for budget alerts via Gmail SMTP
 - Savings Goals with progress tracking  
 - Real-time Updates
 - Expense Reports and Interactive Charts & Graphs  
 - Date Filtering: Month-based expense filtering
 - Empty State Design: Engaging empty states with clear call-to-actions
 - Secure Data Management  
+
+### **Budget Management** 🆕
+- **Category-Based Budgets**: Set monthly budgets for each expense category
+- **Real-Time Tracking**: Automatic spending vs budget calculations
+- **Email Alerts**: Email notifications when budget thresholds are reached
+- **Visual Progress Indicators**: Color-coded progress bars (on track, warning, exceeded)
+- **Budget Statistics**: Overall budget overview with category breakdown
+- **Configurable Thresholds**: Customize alert thresholds (0-100%)
+- **Automated Checks**: Scheduled budget monitoring every 6 hours
+- **HTML Email Templates**: Professional budget alert emails with progress visualization
 
 ### **Savings Goals**
 - **Goal Tracking**: Set and monitor savings targets
@@ -49,6 +61,8 @@ AI-driven expense management platform built with the MERN stack, featuring an in
 - **MongoDB** - NoSQL database
 - **JWT** - Authentication tokens
 - **Mongoose** - MongoDB object modeling
+- **Nodemailer** - Email service integration (Gmail SMTP)
+- **node-cron** - Scheduled task execution for budget checks
 
 ### **Deployment**
 - **Netlify** - Frontend hosting with auto-deployment
@@ -72,8 +86,9 @@ AI-driven expense management platform built with the MERN stack, featuring an in
    cd ../frontend
    npm install
    ```
-3. Create a `.env` file in the backend directory with your MongoDB connection string and JWT secret
-4. Start the development servers:
+3. Create a `.env` file in the backend directory with your MongoDB connection string, JWT 
+secret and other credentials.
+4. **Start the development servers:**
    ```bash
    # Start backend server
    cd backend
@@ -96,15 +111,23 @@ FinanceManager/
 │   ├── controllers/            # Route controllers
 │   │   ├── authController.js   # Authentication logic
 │   │   ├── expenseController.js # Expense management
-│   │   └── savingsGoalController.js # Savings goals
+│   │   ├── savingsGoalController.js # Savings goals
+│   │   └── budgetController.js # Budget management
 │   ├── middleware/             # Authentication middleware
 │   ├── models/                 # MongoDB schemas
 │   │   ├── User.js            # User model
 │   │   ├── Expense.js         # Expense model
-│   │   └── savingsGoal.js     # Savings goal model
+│   │   ├── savingsGoal.js     # Savings goal model
+│   │   └── Budget.js          # Budget model
 │   ├── routes/                 # API endpoints
+│   │   ├── authRoutes.js     # Authentication routes
+│   │   ├── expenseRoutes.js  # Expense routes
+│   │   ├── savingsGoalRoutes.js # Savings goal routes
+│   │   └── budgetRoutes.js    # Budget routes
 │   ├── services/               # Business logic
-│   └── server.js              # Main server file
+│   │   ├── emailService.js    # Email notification service
+│   │   └── budgetNotificationService.js # Budget alert service
+│   └── app.js                 # Main server file
 ├── frontend/                   # React application
 │   ├── components/             # Reusable UI components
 │   │   ├── Layout.jsx         # Main layout with navigation
@@ -114,14 +137,20 @@ FinanceManager/
 │   │   ├── AuthContext.jsx    # Authentication state
 │   │   ├── ExpenseContext.jsx # Expense management
 │   │   ├── SavingsContext.jsx # Savings goals
+│   │   ├── BudgetContext.jsx  # Budget management
 │   │   └── ThemeContext.jsx   # Theme management
 │   ├── pages/                  # Application pages
 │   │   ├── Analytics.jsx      # Unified analytics dashboard
 │   │   ├── Expenses.jsx       # Expense management
+│   │   ├── Budgets.jsx        # Budget management
 │   │   ├── SavingsGoals.jsx   # Savings goals
 │   │   ├── Login.jsx          # User authentication
-│   │   └── Register.jsx       # User registration
+│   │   ├── Register.jsx       # User registration
+│   │   └── GoogleAuthSuccess.jsx # Google OAuth callback
 │   ├── services/               # API service functions
+│   │   ├── authService.js     # Authentication API
+│   │   ├── expenseService.js  # Expense API
+│   │   └── budgetService.js   # Budget API
 │   ├── utils/                  # Helper functions
 │   └── AppRoutes.jsx          # Application routing
 └── README.md
@@ -136,6 +165,47 @@ FinanceManager/
 - **Responsive Layout**: Optimized for desktop and mobile
 - **Dark Theme**: Modern dark mode as default
 - **Visual Hierarchy**: Clear information architecture
+
+## 📧 Email Notifications
+
+The platform includes automated email notifications for budget alerts:
+
+- **Automatic Checks**: Budgets are checked every 6 hours
+- **Smart Alerts**: Receive emails when budget thresholds are reached
+- **Professional Templates**: HTML emails with progress visualization
+- **Spam Prevention**: Limits to 1 email per day per budget
+- **Configurable**: Enable/disable per budget with custom thresholds
+
+## API Endpoints:
+
+### Budget Management
+- `GET /api/budgets` - Get all budgets (optionally filtered by month)
+- `POST /api/budgets` - Create or update budget
+- `GET /api/budgets/:id` - Get specific budget
+- `PUT /api/budgets/:id` - Update budget
+- `DELETE /api/budgets/:id` - Delete budget
+- `GET /api/budgets/statistics` - Get budget statistics
+- `GET /api/budgets/alerts` - Get budget alerts
+- `POST /api/budgets/check` - Manually trigger budget check (for testing)
+
+## Testing:
+
+### Test Email Notifications
+
+1. **Quick Test Script**:
+   ```bash
+   cd backend
+   node test-email.js
+   ```
+
+2. **Manual Trigger**:
+   - Make a POST request to `/api/budgets/check` with your JWT token
+   - Or use the test utilities provided
+
+3. **Setup Test Budget**:
+   - Create a budget with low threshold (10%)
+   - Add expenses to exceed threshold
+   - Check email inbox for alerts
 
 ## Contributing
 

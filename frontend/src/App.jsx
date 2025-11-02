@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ExpenseProvider } from './context/ExpenseContext';
 import { SavingsProvider } from './context/SavingsContext';
+import { BudgetProvider } from './context/BudgetContext';
 import AppRoutes from './AppRoutes';
 import './App.css';
 
@@ -15,7 +16,9 @@ function App() {
         <AuthProvider>
           <ExpenseProvider>
             <SavingsProvider>
-              <AppRoutes />
+              <BudgetProvider>
+                <AppRoutes />
+              </BudgetProvider>
             </SavingsProvider>
           </ExpenseProvider>
         </AuthProvider>

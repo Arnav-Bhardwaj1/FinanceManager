@@ -5,6 +5,7 @@ import Expenses from './pages/Expenses';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import SavingsGoals from './pages/SavingsGoals';
+import Budgets from './pages/Budgets';
 import GoogleAuthSuccess from './pages/GoogleAuthSuccess';
 import { useAuth } from './context/AuthContext';
 
@@ -51,6 +52,15 @@ const AppRoutes = () => {
         element={
           <PrivateRoute>
             <Expenses />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/budgets"
+        element={
+          <PrivateRoute>
+            <Budgets />
           </PrivateRoute>
         }
       />
