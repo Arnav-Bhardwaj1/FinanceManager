@@ -75,7 +75,16 @@ mongoose.connect(MONGODB_URI)
       
       // Schedule budget notification checks
       // Runs every 6 hours (at 00:00, 06:00, 12:00, 18:00)
-      if (process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD) {
+      const hasEmailService = 
+        process.env.SENDGRID_API_KEY || 
+        process.env.RESEND_API_KEY || 
+        (process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD);
+      
+      if (hasEmailService) {
+        const serviceType = process.env.SENDGRID_API_KEY ? 'SendGrid' : 
+                           process.env.RESEND_API_KEY ? 'Resend' : 'Gmail';
+        console.log(`📧 Email service configured: ${serviceType}`);
+        
         cron.schedule('0 */6 * * *', async () => {
           console.log('⏰ Running scheduled budget check...');
           try {
@@ -98,7 +107,8 @@ mongoose.connect(MONGODB_URI)
           }, 5000); // Wait 5 seconds after server starts
         }
       } else {
-        console.log('⚠️ Email notifications disabled - EMAIL_USER and EMAIL_APP_PASSWORD not configured');
+        console.log('⚠️ Email notifications disabled - No email service configured');
+        console.log('   Configure one of: SENDGRID_API_KEY, RESEND_API_KEY, or EMAIL_USER + EMAIL_APP_PASSWORD');
       }
     });
   })
