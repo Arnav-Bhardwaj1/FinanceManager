@@ -1,14 +1,59 @@
 const nodemailer = require('nodemailer');
 
-// Create transporter for Gmail SMTP
+// Create transporter for Gmail SMTP with production-ready settings
 const createTransporter = () => {
-  // Use environment variables for Gmail credentials
+  // Check if we should use SendGrid or Resend (production email services)
+  if (process.env.SENDGRID_API_KEY) {
+    return nodemailer.createTransport({
+      host: 'smtp.sendgrid.net',
+      port: 587,
+      secure: false,
+      auth: {
+        user: 'apikey',
+        pass: process.env.SENDGRID_API_KEY,
+      },
+      connectionTimeout: 30000, // 30 seconds
+      greetingTimeout: 30000,
+      socketTimeout: 30000,
+      debug: process.env.NODE_ENV === 'development',
+    });
+  }
+
+  if (process.env.RESEND_API_KEY) {
+    return nodemailer.createTransport({
+      host: 'smtp.resend.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: 'resend',
+        pass: process.env.RESEND_API_KEY,
+      },
+      connectionTimeout: 30000,
+      greetingTimeout: 30000,
+      socketTimeout: 30000,
+    });
+  }
+
+  // Use Gmail SMTP with explicit configuration for better reliability
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // true for 465, false for other ports
     auth: {
-      user: process.env.EMAIL_USER, // Your Gmail address
-      pass: process.env.EMAIL_APP_PASSWORD, // Gmail App Password (not regular password)
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_APP_PASSWORD,
     },
+    // Production-ready timeout settings
+    connectionTimeout: 30000, // 30 seconds (increased from default 2s)
+    greetingTimeout: 30000, // 30 seconds
+    socketTimeout: 30000, // 30 seconds
+    // Retry settings
+    pool: true, // Use connection pooling
+    maxConnections: 1,
+    maxMessages: 5,
+    // Debug (only in development)
+    debug: process.env.NODE_ENV === 'development',
+    logger: process.env.NODE_ENV === 'development',
   });
 
   return transporter;
@@ -212,19 +257,34 @@ const getBudgetAlertEmailTemplate = (budgetData) => {
   `;
 };
 
-// Send budget alert email
-const sendBudgetAlertEmail = async (userEmail, userName, budgetData) => {
+// Send budget alert email with retry logic
+const sendBudgetAlertEmail = async (userEmail, userName, budgetData, retries = 2) => {
   try {
-    // Check if email service is configured
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD) {
+    // Check if any email service is configured
+    const hasEmailService = 
+      process.env.SENDGRID_API_KEY || 
+      process.env.RESEND_API_KEY || 
+      (process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD);
+
+    if (!hasEmailService) {
       console.warn('Email service not configured. Skipping email notification.');
       return { success: false, message: 'Email service not configured' };
     }
 
     const transporter = createTransporter();
 
+    // Determine sender email
+    let fromEmail;
+    if (process.env.SENDGRID_API_KEY || process.env.RESEND_API_KEY) {
+      // For SendGrid/Resend, use the verified sender email
+      fromEmail = process.env.EMAIL_USER || process.env.SENDER_EMAIL || 'noreply@financemanager.com';
+    } else {
+      // For Gmail, use the authenticated email
+      fromEmail = process.env.EMAIL_USER;
+    }
+
     const mailOptions = {
-      from: `"Finance Manager" <${process.env.EMAIL_USER}>`,
+      from: `"Finance Manager" <${fromEmail}>`,
       to: userEmail,
       subject: `🚨 Budget Alert: ${budgetData.category} - ${budgetData.isExceeded ? 'Exceeded' : 'Warning'}`,
       html: getBudgetAlertEmailTemplate({
@@ -233,27 +293,74 @@ const sendBudgetAlertEmail = async (userEmail, userName, budgetData) => {
       }),
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Budget alert email sent:', info.messageId);
-    return { success: true, messageId: info.messageId };
+    // Retry logic for connection issues
+    let lastError;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const info = await transporter.sendMail(mailOptions);
+        console.log('✅ Budget alert email sent:', info.messageId);
+        return { success: true, messageId: info.messageId };
+      } catch (error) {
+        lastError = error;
+        
+        // Don't retry on certain errors
+        if (error.code === 'EAUTH' || error.code === 'EENVELOPE') {
+          console.error('❌ Email authentication/envelope error, not retrying:', error.message);
+          break;
+        }
+
+        // Retry on connection/timeout errors
+        if (error.code === 'ETIMEDOUT' || error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT') {
+          if (attempt < retries) {
+            const delay = (attempt + 1) * 2000; // Exponential backoff: 2s, 4s
+            console.warn(`⚠️ Email send failed (attempt ${attempt + 1}/${retries + 1}), retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+        }
+
+        // If not a retryable error or out of retries, break
+        break;
+      }
+    }
+
+    // All retries failed
+    console.error('❌ Failed to send budget alert email after retries:', lastError?.message || lastError);
+    return { success: false, error: lastError?.message || 'Unknown error', code: lastError?.code };
   } catch (error) {
-    console.error('Error sending budget alert email:', error);
-    return { success: false, error: error.message };
+    console.error('❌ Error in sendBudgetAlertEmail:', error);
+    return { success: false, error: error.message, code: error.code };
   }
 };
 
 // Test email configuration
 const testEmailConfiguration = async () => {
   try {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD) {
+    const hasEmailService = 
+      process.env.SENDGRID_API_KEY || 
+      process.env.RESEND_API_KEY || 
+      (process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD);
+
+    if (!hasEmailService) {
       return { success: false, message: 'Email credentials not configured' };
     }
 
     const transporter = createTransporter();
-    await transporter.verify();
-    return { success: true, message: 'Email configuration is valid' };
+    
+    // Verify connection with timeout
+    await Promise.race([
+      transporter.verify(),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Connection timeout')), 20000)
+      )
+    ]);
+
+    const serviceType = process.env.SENDGRID_API_KEY ? 'SendGrid' : 
+                       process.env.RESEND_API_KEY ? 'Resend' : 'Gmail';
+    
+    return { success: true, message: `${serviceType} email configuration is valid` };
   } catch (error) {
-    return { success: false, message: error.message };
+    return { success: false, message: error.message, code: error.code };
   }
 };
 

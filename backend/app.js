@@ -9,6 +9,8 @@ console.log('🔍 JWT_SECRET:', process.env.JWT_SECRET ? 'Set' : 'Not Set');
 console.log('🔍 MONGO_URI:', process.env.MONGO_URI ? 'Set' : 'Not Set');
 console.log('🔍 EMAIL_USER:', process.env.EMAIL_USER ? 'Set' : 'Not Set');
 console.log('🔍 EMAIL_APP_PASSWORD:', process.env.EMAIL_APP_PASSWORD ? 'Set' : 'Not Set');
+console.log('🔍 SENDGRID_API_KEY:', process.env.SENDGRID_API_KEY ? 'Set (Using SendGrid)' : 'Not Set');
+console.log('🔍 RESEND_API_KEY:', process.env.RESEND_API_KEY ? 'Set (Using Resend)' : 'Not Set');
 
 const express = require('express');
 const mongoose = require('mongoose');
@@ -46,6 +48,11 @@ app.use(session({
 // Passport middleware
 app.use(passport.initialize());
 app.use(passport.session());
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'Server is running' });
+});
 
 // Routes
 app.use('/api/auth', authRoutes);

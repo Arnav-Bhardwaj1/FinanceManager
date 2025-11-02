@@ -13,10 +13,18 @@ async function runTests() {
   console.log('1️⃣ Testing email configuration...');
   const emailTest = await testEmailConfiguration();
   if (emailTest.success) {
-    console.log('   ✅ Email configuration is valid\n');
+    console.log(`   ✅ ${emailTest.message}\n`);
   } else {
     console.log('   ❌ Email configuration failed:', emailTest.message);
-    console.log('   Make sure EMAIL_USER and EMAIL_APP_PASSWORD are set in .env\n');
+    console.log('\n   💡 Setup options:');
+    console.log('   1. SendGrid (Recommended for production):');
+    console.log('      - Sign up: https://sendgrid.com');
+    console.log('      - Add SENDGRID_API_KEY to .env');
+    console.log('   2. Resend (Alternative):');
+    console.log('      - Sign up: https://resend.com');
+    console.log('      - Add RESEND_API_KEY to .env');
+    console.log('   3. Gmail SMTP (May fail in production):');
+    console.log('      - Add EMAIL_USER and EMAIL_APP_PASSWORD to .env\n');
     process.exit(1);
   }
   

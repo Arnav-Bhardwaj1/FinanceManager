@@ -1457,7 +1457,7 @@ const ContributionHistoryDialog = ({ open, onClose, goal }) => {
                       />
                     </ListItem>
                   </Fade>
-                ))}
+            ))}
             </List>
           </Box>
         ) : (

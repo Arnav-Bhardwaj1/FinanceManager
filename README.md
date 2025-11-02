@@ -166,6 +166,7 @@ FinanceManager/
 - **Dark Theme**: Modern dark mode as default
 - **Visual Hierarchy**: Clear information architecture
 
+
 ## 📧 Email Notifications
 
 The platform includes automated email notifications for budget alerts:
@@ -188,8 +189,6 @@ The platform includes automated email notifications for budget alerts:
 - `GET /api/budgets/alerts` - Get budget alerts
 - `POST /api/budgets/check` - Manually trigger budget check (for testing)
 
-## Testing:
-
 ### Test Email Notifications
 
 1. **Quick Test Script**:
@@ -200,7 +199,6 @@ The platform includes automated email notifications for budget alerts:
 
 2. **Manual Trigger**:
    - Make a POST request to `/api/budgets/check` with your JWT token
-   - Or use the test utilities provided
 
 3. **Setup Test Budget**:
    - Create a budget with low threshold (10%)
@@ -211,9 +209,10 @@ The platform includes automated email notifications for budget alerts:
 
 1. Fork the repository
 2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Open a Pull Request
+3. Write tests for new features
+4. Commit your changes
+5. Push to the branch
+6. Open a Pull Request
 
 ## License
 

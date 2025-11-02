@@ -15,6 +15,18 @@ node_modules/
 /build
 /dist
 
+# Test coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Docker
+.docker/
+
+# Documentation
+DOCKER.md
+TESTING.md
+
 # Debug logs
 npm-debug.log*
 yarn-debug.log*

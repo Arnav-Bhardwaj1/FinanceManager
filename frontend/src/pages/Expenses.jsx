@@ -449,10 +449,10 @@ const Expenses = () => {
             }}>
               <FormControl sx={{ minWidth: { xs: '100%', sm: 200 } }}>
                 <InputLabel sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}>Select Month</InputLabel>
-                <Select
-                  value={selectedMonth}
-                  label="Select Month"
-                  onChange={(e) => setSelectedMonth(e.target.value)}
+            <Select
+              value={selectedMonth}
+              label="Select Month"
+              onChange={(e) => setSelectedMonth(e.target.value)}
                   sx={{
                     borderRadius: 2,
                     fontSize: { xs: '0.9rem', sm: '1rem' },
@@ -460,18 +460,18 @@ const Expenses = () => {
                       borderRadius: 2,
                     },
                   }}
-                >
-                  {getPastMonths().map((month) => (
+            >
+              {getPastMonths().map((month) => (
                     <MenuItem key={month.value} value={month.value} sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}>
-                      {month.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <Button
-                variant="contained"
+                  {month.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Button
+            variant="contained"
                 startIcon={<AddIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />}
-                onClick={() => handleOpen()}
+            onClick={() => handleOpen()}
                 sx={{
                   borderRadius: 2,
                   px: { xs: 2, sm: 3 },
@@ -486,11 +486,11 @@ const Expenses = () => {
                     boxShadow: '0 6px 16px rgba(33, 150, 243, 0.4)',
                   },
                 }}
-              >
-                Add Expense
-              </Button>
-            </Box>
-          </Box>
+          >
+            Add Expense
+          </Button>
+        </Box>
+      </Box>
         </Box>
       </Fade>
 

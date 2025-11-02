@@ -55,7 +55,7 @@ const AppRoutes = () => {
           </PrivateRoute>
         }
       />
-
+      
       <Route
         path="/budgets"
         element={

@@ -104,8 +104,8 @@ const Register = () => {
             : 'radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%)',
           pointerEvents: 'none',
         },
-      }}
-    >
+        }}
+      >
       <Container maxWidth="sm">
         <Slide direction="up" in={true} timeout={800}>
           <Paper

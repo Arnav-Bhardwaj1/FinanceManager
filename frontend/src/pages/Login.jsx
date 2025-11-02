@@ -66,14 +66,14 @@ const Login = () => {
   };
 
   return (
-    <Box
-      sx={{
+      <Box
+        sx={{
         minHeight: '100vh',
         background: theme.palette.mode === 'dark' 
           ? 'linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%)'
           : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        display: 'flex',
-        alignItems: 'center',
+          display: 'flex',
+          alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
         overflow: 'hidden',
@@ -89,8 +89,8 @@ const Login = () => {
             : 'radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%)',
           pointerEvents: 'none',
         },
-      }}
-    >
+        }}
+      >
       <Container maxWidth="sm">
         <Slide direction="up" in={true} timeout={800}>
           <Paper
@@ -132,8 +132,8 @@ const Login = () => {
                   />
                 </Box>
               </Fade>
-              <Typography
-                component="h1"
+          <Typography
+            component="h1"
                 variant="h4"
                 sx={{
                   fontWeight: 700,
@@ -154,13 +154,13 @@ const Login = () => {
                   color: theme.palette.text.secondary,
                   fontSize: '1.1rem',
                 }}
-              >
+          >
                 Sign in to your Finance Tracker account
-              </Typography>
+          </Typography>
             </Box>
 
             {/* Error Alert */}
-            {error && (
+          {error && (
               <Fade in={!!error} timeout={300}>
                 <Alert 
                   severity="error" 
@@ -172,25 +172,25 @@ const Login = () => {
                     },
                   }}
                 >
-                  {error}
-                </Alert>
+              {error}
+            </Alert>
               </Fade>
-            )}
+          )}
 
             {/* Form */}
-            <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit}>
               <Box sx={{ mb: 3 }}>
-                <TextField
+            <TextField
                   fullWidth
-                  required
-                  id="email"
-                  label="Email Address"
-                  name="email"
+              required
+              id="email"
+              label="Email Address"
+              name="email"
                   type="email"
-                  autoComplete="email"
-                  autoFocus
-                  value={formData.email}
-                  onChange={handleChange}
+              autoComplete="email"
+              autoFocus
+              value={formData.email}
+              onChange={handleChange}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -216,16 +216,16 @@ const Login = () => {
               </Box>
 
               <Box sx={{ mb: 4 }}>
-                <TextField
+            <TextField
                   fullWidth
-                  required
-                  name="password"
-                  label="Password"
+              required
+              name="password"
+              label="Password"
                   type={showPassword ? 'text' : 'password'}
-                  id="password"
-                  autoComplete="current-password"
-                  value={formData.password}
-                  onChange={handleChange}
+              id="password"
+              autoComplete="current-password"
+              value={formData.password}
+              onChange={handleChange}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -261,10 +261,10 @@ const Login = () => {
                 />
               </Box>
 
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
                 disabled={isLoading}
                 sx={{
                   py: 1.5,
@@ -328,13 +328,13 @@ const Login = () => {
                 }}
               >
                 Continue with Google
-              </Button>
+            </Button>
 
               <Box sx={{ textAlign: 'center', mt: 2.5 }}>
                 <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 1 }}>
                   Don't have an account?
                 </Typography>
-                <Link to="/register" style={{ textDecoration: 'none' }}>
+              <Link to="/register" style={{ textDecoration: 'none' }}>
                   <Typography
                     variant="body2"
                     sx={{
@@ -348,14 +348,14 @@ const Login = () => {
                     }}
                   >
                     Create Account
-                  </Typography>
-                </Link>
-              </Box>
-            </form>
-          </Paper>
+                </Typography>
+              </Link>
+            </Box>
+          </form>
+        </Paper>
         </Slide>
       </Container>
-    </Box>
+      </Box>
   );
 };
 

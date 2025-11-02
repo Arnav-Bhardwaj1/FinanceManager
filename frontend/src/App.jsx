@@ -17,7 +17,7 @@ function App() {
           <ExpenseProvider>
             <SavingsProvider>
               <BudgetProvider>
-                <AppRoutes />
+              <AppRoutes />
               </BudgetProvider>
             </SavingsProvider>
           </ExpenseProvider>
