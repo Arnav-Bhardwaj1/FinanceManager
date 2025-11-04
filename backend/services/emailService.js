@@ -318,11 +318,42 @@ const sendBudgetAlertEmail = async (userEmail, userName, budgetData, retries = 2
           return { success: true, messageId: result.data.id };
         } else {
           console.error('❌ Resend API error:', result.error);
-          return { success: false, error: result.error?.message || 'Resend API error' };
+          
+          // If Resend fails due to unverified domain (can only send to account owner),
+          // fall back to Gmail SMTP if available
+          if (result.error?.statusCode === 403 && 
+              result.error?.message?.includes('You can only send testing emails to your own email address')) {
+            console.warn('⚠️ Resend requires verified domain. Falling back to Gmail SMTP...');
+            
+            // Update fromEmail to Gmail for fallback
+            if (process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD) {
+              fromEmail = process.env.EMAIL_USER;
+              // Continue to Gmail SMTP fallback below
+            } else {
+              return { success: false, error: result.error?.message || 'Resend API error' };
+            }
+          } else {
+            return { success: false, error: result.error?.message || 'Resend API error' };
+          }
         }
       } catch (error) {
         console.error('❌ Error sending email via Resend:', error.message);
-        return { success: false, error: error.message };
+        
+        // If Resend fails due to unverified domain, fall back to Gmail SMTP
+        if (error.statusCode === 403 && 
+            error.message?.includes('You can only send testing emails to your own email address')) {
+          console.warn('⚠️ Resend requires verified domain. Falling back to Gmail SMTP...');
+          
+          // Update fromEmail to Gmail for fallback
+          if (process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD) {
+            fromEmail = process.env.EMAIL_USER;
+            // Continue to Gmail SMTP fallback below
+          } else {
+            return { success: false, error: error.message };
+          }
+        } else {
+          return { success: false, error: error.message };
+        }
       }
     }
 
