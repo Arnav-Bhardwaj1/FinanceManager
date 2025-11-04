@@ -1,8 +1,15 @@
 const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
+
+// Initialize Resend client if API key is available
+let resendClient = null;
+if (process.env.RESEND_API_KEY) {
+  resendClient = new Resend(process.env.RESEND_API_KEY);
+}
 
 // Create transporter for Gmail SMTP with production-ready settings
 const createTransporter = () => {
-  // Check if we should use SendGrid or Resend (production email services)
+  // Check if we should use SendGrid (production email service)
   if (process.env.SENDGRID_API_KEY) {
     return nodemailer.createTransport({
       host: 'smtp.sendgrid.net',
@@ -16,23 +23,6 @@ const createTransporter = () => {
       greetingTimeout: 30000,
       socketTimeout: 30000,
       debug: process.env.NODE_ENV === 'development',
-    });
-  }
-
-  if (process.env.RESEND_API_KEY) {
-    return nodemailer.createTransport({
-      host: 'smtp.resend.com',
-      port: 465,
-      secure: true, // Use SSL for port 465
-      auth: {
-        user: 'resend',
-        pass: process.env.RESEND_API_KEY,
-      },
-      connectionTimeout: 30000,
-      greetingTimeout: 30000,
-      socketTimeout: 30000,
-      debug: process.env.NODE_ENV === 'development',
-      logger: process.env.NODE_ENV === 'development',
     });
   }
 
@@ -273,55 +263,67 @@ const sendBudgetAlertEmail = async (userEmail, userName, budgetData, retries = 2
       return { success: false, message: 'Email service not configured' };
     }
 
-    const transporter = createTransporter();
-
     // Determine sender email
     let fromEmail;
-    if (process.env.RESEND_API_KEY) {
-      // For Resend, EMAIL_USER must be a verified domain/email in Resend
+    if (process.env.SENDGRID_API_KEY || process.env.RESEND_API_KEY) {
+      // For SendGrid/Resend, use the verified sender email
       fromEmail = process.env.EMAIL_USER || process.env.SENDER_EMAIL;
       if (!fromEmail) {
-        console.error('❌ EMAIL_USER is required when using Resend. Please set it to a verified email/domain in your Resend account.');
-        return { success: false, message: 'EMAIL_USER is required for Resend' };
+        console.error('❌ EMAIL_USER or SENDER_EMAIL must be set for SendGrid/Resend');
+        return { success: false, message: 'EMAIL_USER or SENDER_EMAIL not configured' };
       }
-    } else if (process.env.SENDGRID_API_KEY) {
-      // For SendGrid, use the verified sender email
-      fromEmail = process.env.EMAIL_USER || process.env.SENDER_EMAIL || 'noreply@financemanager.com';
     } else {
       // For Gmail, use the authenticated email
       fromEmail = process.env.EMAIL_USER;
     }
 
+    const subject = `🚨 Budget Alert: ${budgetData.category} - ${budgetData.isExceeded ? 'Exceeded' : 'Warning'}`;
+    const html = getBudgetAlertEmailTemplate({
+      ...budgetData,
+      userName,
+    });
+
+    // Use Resend SDK if available (most reliable)
+    if (process.env.RESEND_API_KEY && resendClient) {
+      try {
+        const result = await resendClient.emails.send({
+          from: `Finance Manager <${fromEmail}>`,
+          to: userEmail,
+          subject: subject,
+          html: html,
+        });
+
+        if (result.data) {
+          console.log('✅ Budget alert email sent via Resend:', result.data.id);
+          return { success: true, messageId: result.data.id };
+        } else {
+          console.error('❌ Resend API error:', result.error);
+          return { success: false, error: result.error?.message || 'Resend API error' };
+        }
+      } catch (error) {
+        console.error('❌ Error sending email via Resend:', error.message);
+        return { success: false, error: error.message };
+      }
+    }
+
+    // Use SendGrid or Gmail via nodemailer
+    const transporter = createTransporter();
     const mailOptions = {
       from: `"Finance Manager" <${fromEmail}>`,
       to: userEmail,
-      subject: `🚨 Budget Alert: ${budgetData.category} - ${budgetData.isExceeded ? 'Exceeded' : 'Warning'}`,
-      html: getBudgetAlertEmailTemplate({
-        ...budgetData,
-        userName,
-      }),
+      subject: subject,
+      html: html,
     };
-
-    // Log which service is being used
-    const serviceType = process.env.SENDGRID_API_KEY ? 'SendGrid' : 
-                       process.env.RESEND_API_KEY ? 'Resend' : 'Gmail';
-    console.log(`📧 Attempting to send email via ${serviceType} to ${userEmail}`);
 
     // Retry logic for connection issues
     let lastError;
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         const info = await transporter.sendMail(mailOptions);
-        console.log(`✅ Budget alert email sent via ${serviceType}:`, info.messageId);
+        console.log('✅ Budget alert email sent:', info.messageId);
         return { success: true, messageId: info.messageId };
       } catch (error) {
         lastError = error;
-        console.error(`❌ Email send attempt ${attempt + 1} failed:`, {
-          code: error.code,
-          command: error.command,
-          message: error.message,
-          response: error.response,
-        });
         
         // Don't retry on certain errors
         if (error.code === 'EAUTH' || error.code === 'EENVELOPE') {
@@ -330,7 +332,7 @@ const sendBudgetAlertEmail = async (userEmail, userName, budgetData, retries = 2
         }
 
         // Retry on connection/timeout errors
-        if (error.code === 'ETIMEDOUT' || error.code === 'ECONNRESET' || error.code === 'ESOCKET') {
+        if (error.code === 'ETIMEDOUT' || error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT') {
           if (attempt < retries) {
             const delay = (attempt + 1) * 2000; // Exponential backoff: 2s, 4s
             console.warn(`⚠️ Email send failed (attempt ${attempt + 1}/${retries + 1}), retrying in ${delay}ms...`);
@@ -365,6 +367,16 @@ const testEmailConfiguration = async () => {
       return { success: false, message: 'Email credentials not configured' };
     }
 
+    // Test Resend (if configured)
+    if (process.env.RESEND_API_KEY && resendClient) {
+      // Resend doesn't have a verify method, but we can check if client is initialized
+      if (!process.env.EMAIL_USER && !process.env.SENDER_EMAIL) {
+        return { success: false, message: 'EMAIL_USER or SENDER_EMAIL must be set for Resend' };
+      }
+      return { success: true, message: 'Resend email configuration is valid' };
+    }
+
+    // Test SendGrid or Gmail via nodemailer
     const transporter = createTransporter();
     
     // Verify connection with timeout
@@ -375,8 +387,7 @@ const testEmailConfiguration = async () => {
       )
     ]);
 
-    const serviceType = process.env.SENDGRID_API_KEY ? 'SendGrid' : 
-                       process.env.RESEND_API_KEY ? 'Resend' : 'Gmail';
+    const serviceType = process.env.SENDGRID_API_KEY ? 'SendGrid' : 'Gmail';
     
     return { success: true, message: `${serviceType} email configuration is valid` };
   } catch (error) {

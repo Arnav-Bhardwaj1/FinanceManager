@@ -81,10 +81,6 @@ mongoose.connect(MONGODB_URI)
         (process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD);
       
       if (hasEmailService) {
-        const serviceType = process.env.SENDGRID_API_KEY ? 'SendGrid' : 
-                           process.env.RESEND_API_KEY ? 'Resend' : 'Gmail';
-        console.log(`📧 Email service configured: ${serviceType}`);
-        
         cron.schedule('0 */6 * * *', async () => {
           console.log('⏰ Running scheduled budget check...');
           try {
@@ -108,7 +104,6 @@ mongoose.connect(MONGODB_URI)
         }
       } else {
         console.log('⚠️ Email notifications disabled - No email service configured');
-        console.log('   Configure one of: SENDGRID_API_KEY, RESEND_API_KEY, or EMAIL_USER + EMAIL_APP_PASSWORD');
       }
     });
   })

@@ -64,9 +64,16 @@ AI-driven expense management platform built with the MERN stack, featuring an in
 - **Nodemailer** - Email service integration (Gmail SMTP)
 - **node-cron** - Scheduled task execution for budget checks
 
+### **Testing**
+- **Jest** - Backend unit and integration testing
+- **Supertest** - API endpoint testing
+- **Vitest** - Frontend unit testing
+- **React Testing Library** - Component testing
+
 ### **Deployment**
 - **Netlify** - Frontend hosting with auto-deployment
 - **Render** - Backend hosting with auto-deployment
+- **Docker** - Containerization for easy deployment
 
 ## Setup Instructions
 
@@ -103,6 +110,27 @@ secret and other credentials.
    - Frontend: `http://localhost:5173`
    - Backend API: `http://localhost:5000`
 
+## 🐳 Docker Setup
+
+The application can be run entirely using Docker:
+
+### Quick Start with Docker
+
+1. **Build and run all services**:
+   ```bash
+   docker-compose up --build
+   ```
+
+2. **Access the application**:
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:5000
+   - MongoDB: Running in container
+
+### Development with Docker
+
+```bash
+docker-compose -f docker-compose.dev.yml up --build
+```
 ## 📁 Project Structure
 
 ```
@@ -188,6 +216,26 @@ The platform includes automated email notifications for budget alerts:
 - `GET /api/budgets/statistics` - Get budget statistics
 - `GET /api/budgets/alerts` - Get budget alerts
 - `POST /api/budgets/check` - Manually trigger budget check (for testing)
+
+## Testing:
+
+### Run Tests
+
+**Backend Tests:**
+```bash
+cd backend
+npm test              # Run all tests
+npm run test:watch    # Watch mode
+npm test -- --coverage # With coverage report
+```
+
+**Frontend Tests:**
+```bash
+cd frontend
+npm test             
+npm run test:ui       
+npm run test:coverage 
+```
 
 ### Test Email Notifications
 
