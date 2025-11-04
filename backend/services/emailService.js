@@ -265,12 +265,32 @@ const sendBudgetAlertEmail = async (userEmail, userName, budgetData, retries = 2
 
     // Determine sender email
     let fromEmail;
-    if (process.env.SENDGRID_API_KEY || process.env.RESEND_API_KEY) {
-      // For SendGrid/Resend, use the verified sender email
-      fromEmail = process.env.EMAIL_USER || process.env.SENDER_EMAIL;
+    if (process.env.RESEND_API_KEY) {
+      // For Resend, MUST use a verified sender email (NOT Gmail)
+      // Priority: RESEND_SENDER_EMAIL > SENDER_EMAIL > EMAIL_USER (only if not Gmail)
+      fromEmail = process.env.RESEND_SENDER_EMAIL || process.env.SENDER_EMAIL;
+      
+      // Only use EMAIL_USER if it's not a Gmail address (Gmail won't work with Resend)
+      if (!fromEmail && process.env.EMAIL_USER && !process.env.EMAIL_USER.includes('@gmail.com')) {
+        fromEmail = process.env.EMAIL_USER;
+      }
+      
       if (!fromEmail) {
-        console.error('❌ EMAIL_USER or SENDER_EMAIL must be set for SendGrid/Resend');
-        return { success: false, message: 'EMAIL_USER or SENDER_EMAIL not configured' };
+        console.error('❌ RESEND_SENDER_EMAIL or SENDER_EMAIL must be set for Resend (cannot use Gmail addresses)');
+        return { success: false, message: 'Verified sender email not configured for Resend' };
+      }
+      
+      // Warn if trying to use Gmail with Resend
+      if (fromEmail.includes('@gmail.com')) {
+        console.error('❌ Cannot use Gmail address with Resend. Please set RESEND_SENDER_EMAIL or SENDER_EMAIL to a verified Resend sender.');
+        return { success: false, message: 'Gmail addresses are not supported with Resend. Please use a verified sender email.' };
+      }
+    } else if (process.env.SENDGRID_API_KEY) {
+      // For SendGrid, use the verified sender email
+      fromEmail = process.env.SENDER_EMAIL || process.env.EMAIL_USER;
+      if (!fromEmail) {
+        console.error('❌ SENDER_EMAIL or EMAIL_USER must be set for SendGrid');
+        return { success: false, message: 'SENDER_EMAIL or EMAIL_USER not configured' };
       }
     } else {
       // For Gmail, use the authenticated email
@@ -370,8 +390,12 @@ const testEmailConfiguration = async () => {
     // Test Resend (if configured)
     if (process.env.RESEND_API_KEY && resendClient) {
       // Resend doesn't have a verify method, but we can check if client is initialized
-      if (!process.env.EMAIL_USER && !process.env.SENDER_EMAIL) {
-        return { success: false, message: 'EMAIL_USER or SENDER_EMAIL must be set for Resend' };
+      const senderEmail = process.env.RESEND_SENDER_EMAIL || process.env.SENDER_EMAIL;
+      if (!senderEmail) {
+        return { success: false, message: 'RESEND_SENDER_EMAIL or SENDER_EMAIL must be set for Resend' };
+      }
+      if (senderEmail.includes('@gmail.com')) {
+        return { success: false, message: 'Cannot use Gmail address with Resend. Please use a verified sender email.' };
       }
       return { success: true, message: 'Resend email configuration is valid' };
     }
