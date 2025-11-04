@@ -1,11 +1,4 @@
 const nodemailer = require('nodemailer');
-const { Resend } = require('resend');
-
-// Initialize Resend client if API key is available
-let resendClient = null;
-if (process.env.RESEND_API_KEY) {
-  resendClient = new Resend(process.env.RESEND_API_KEY);
-}
 
 // Create transporter for Gmail SMTP with production-ready settings
 const createTransporter = () => {
@@ -266,14 +259,59 @@ const getBudgetAlertEmailTemplate = (budgetData) => {
   `;
 };
 
+// Send email via Mailjet API (HTTP-based, works on Render)
+const sendViaMailjet = async (to, fromEmail, fromName, subject, html) => {
+  try {
+    const apiKey = process.env.MAILJET_API_KEY;
+    const apiSecret = process.env.MAILJET_API_SECRET;
+    
+    if (!apiKey || !apiSecret) {
+      return { success: false, error: 'Mailjet credentials not configured' };
+    }
+
+    const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64');
+    
+    const response = await fetch('https://api.mailjet.com/v3.1/send', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        Messages: [{
+          From: {
+            Email: fromEmail,
+            Name: fromName || 'Finance Manager',
+          },
+          To: [{
+            Email: to,
+          }],
+          Subject: subject,
+          HTMLPart: html,
+        }],
+      }),
+    });
+
+    const result = await response.json();
+
+    if (response.ok && result.Messages && result.Messages[0].Status === 'success') {
+      return { success: true, messageId: result.Messages[0].To[0].MessageID };
+    } else {
+      return { success: false, error: result.ErrorMessage || 'Mailjet API error' };
+    }
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
 // Send budget alert email with retry logic
 const sendBudgetAlertEmail = async (userEmail, userName, budgetData, retries = 2) => {
   try {
     // Check if any email service is configured
     const hasEmailService = 
+      process.env.MAILJET_API_KEY ||
       process.env.BREVO_API_KEY ||
       process.env.SENDGRID_API_KEY || 
-      process.env.RESEND_API_KEY || 
       (process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD);
 
     if (!hasEmailService) {
@@ -281,34 +319,23 @@ const sendBudgetAlertEmail = async (userEmail, userName, budgetData, retries = 2
       return { success: false, message: 'Email service not configured' };
     }
 
-    // Determine sender email (priority: Brevo > SendGrid > Resend > Gmail)
+    // Determine sender email (priority: Mailjet > Brevo > SendGrid > Gmail)
     let fromEmail;
-    if (process.env.BREVO_API_KEY) {
+    let fromName = 'Finance Manager';
+    
+    if (process.env.MAILJET_API_KEY) {
+      // For Mailjet, use verified sender email
+      fromEmail = process.env.MAILJET_SENDER_EMAIL || process.env.SENDER_EMAIL || process.env.EMAIL_USER;
+      if (!fromEmail) {
+        console.error('❌ MAILJET_SENDER_EMAIL, SENDER_EMAIL, or EMAIL_USER must be set for Mailjet');
+        return { success: false, message: 'Sender email not configured for Mailjet' };
+      }
+    } else if (process.env.BREVO_API_KEY) {
       // For Brevo, use verified sender email (can be Gmail)
       fromEmail = process.env.BREVO_SENDER_EMAIL || process.env.SENDER_EMAIL || process.env.EMAIL_USER;
       if (!fromEmail) {
         console.error('❌ BREVO_SENDER_EMAIL, SENDER_EMAIL, or EMAIL_USER must be set for Brevo');
         return { success: false, message: 'Sender email not configured for Brevo' };
-      }
-    } else if (process.env.RESEND_API_KEY) {
-      // For Resend, MUST use a verified sender email (NOT Gmail)
-      // Priority: RESEND_SENDER_EMAIL > SENDER_EMAIL > EMAIL_USER (only if not Gmail)
-      fromEmail = process.env.RESEND_SENDER_EMAIL || process.env.SENDER_EMAIL;
-      
-      // Only use EMAIL_USER if it's not a Gmail address (Gmail won't work with Resend)
-      if (!fromEmail && process.env.EMAIL_USER && !process.env.EMAIL_USER.includes('@gmail.com')) {
-        fromEmail = process.env.EMAIL_USER;
-      }
-      
-      if (!fromEmail) {
-        console.error('❌ RESEND_SENDER_EMAIL or SENDER_EMAIL must be set for Resend (cannot use Gmail addresses)');
-        return { success: false, message: 'Verified sender email not configured for Resend' };
-      }
-      
-      // Warn if trying to use Gmail with Resend
-      if (fromEmail.includes('@gmail.com')) {
-        console.error('❌ Cannot use Gmail address with Resend. Please set RESEND_SENDER_EMAIL or SENDER_EMAIL to a verified Resend sender.');
-        return { success: false, message: 'Gmail addresses are not supported with Resend. Please use a verified sender email.' };
       }
     } else if (process.env.SENDGRID_API_KEY) {
       // For SendGrid, use the verified sender email
@@ -328,129 +355,21 @@ const sendBudgetAlertEmail = async (userEmail, userName, budgetData, retries = 2
       userName,
     });
 
-    // Use Resend SDK if available (most reliable)
-    if (process.env.RESEND_API_KEY && resendClient) {
+    // Use Mailjet API if available (HTTP-based, works on Render)
+    if (process.env.MAILJET_API_KEY && process.env.MAILJET_API_SECRET) {
       try {
-        const result = await resendClient.emails.send({
-          from: `Finance Manager <${fromEmail}>`,
-          to: userEmail,
-          subject: subject,
-          html: html,
-        });
-
-        if (result.data) {
-          console.log('✅ Budget alert email sent via Resend:', result.data.id);
-          return { success: true, messageId: result.data.id };
+        const result = await sendViaMailjet(userEmail, fromEmail, fromName, subject, html);
+        
+        if (result.success) {
+          console.log('✅ Budget alert email sent via Mailjet:', result.messageId);
+          return result;
         } else {
-          console.error('❌ Resend API error:', result.error);
-          
-          // If Resend fails due to unverified domain (can only send to account owner),
-          // send to account owner email instead (using Resend test sender)
-          if (result.error?.statusCode === 403 && 
-              result.error?.message?.includes('You can only send testing emails to your own email address')) {
-            // Extract account owner email from error message
-            const accountOwnerMatch = result.error.message.match(/your own email address \(([^)]+)\)/);
-            const accountOwnerEmail = accountOwnerMatch ? accountOwnerMatch[1] : process.env.EMAIL_USER;
-            
-            if (accountOwnerEmail && accountOwnerEmail !== userEmail) {
-              console.warn(`⚠️ Resend can only send to account owner. Sending alert to ${accountOwnerEmail} instead of ${userEmail}`);
-              
-              // Modify subject to indicate forwarding
-              const forwardedSubject = `[Forwarded to ${accountOwnerEmail}] ${subject}`;
-              const forwardedHtml = html.replace(
-                `<p>Hi <strong>${userName}</strong>,</p>`,
-                `<p>Hi <strong>${accountOwnerEmail}</strong>,</p>
-                 <p style="background-color: #fff3cd; padding: 10px; border-radius: 4px; margin: 10px 0;">
-                   <strong>Note:</strong> This budget alert was originally intended for <strong>${userEmail}</strong> (${userName}), 
-                   but Resend requires a verified domain to send to external recipients. 
-                   This alert is being forwarded to the account owner email.
-                 </p>
-                 <p>Hi <strong>${userName}</strong> (${userEmail}),</p>`
-              );
-              
-              try {
-                const forwardedResult = await resendClient.emails.send({
-                  from: `Finance Manager <${fromEmail}>`,
-                  to: accountOwnerEmail,
-                  subject: forwardedSubject,
-                  html: forwardedHtml,
-                });
-                
-                if (forwardedResult.data) {
-                  console.log(`✅ Budget alert forwarded to account owner ${accountOwnerEmail} via Resend:`, forwardedResult.data.id);
-                  return { success: true, messageId: forwardedResult.data.id, forwarded: true };
-                }
-              } catch (forwardError) {
-                console.error('❌ Failed to forward email to account owner:', forwardError.message);
-              }
-            }
-            
-            // If forwarding failed or same email, try Gmail SMTP fallback
-            console.warn('⚠️ Attempting Gmail SMTP fallback...');
-            if (process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD) {
-              fromEmail = process.env.EMAIL_USER;
-              // Continue to Gmail SMTP fallback below
-            } else {
-              return { success: false, error: result.error?.message || 'Resend API error' };
-            }
-          } else {
-            return { success: false, error: result.error?.message || 'Resend API error' };
-          }
+          console.error('❌ Mailjet API error:', result.error);
+          // Fall through to SMTP fallback
         }
       } catch (error) {
-        console.error('❌ Error sending email via Resend:', error.message);
-        
-        // If Resend fails due to unverified domain, send to account owner email instead
-        if (error.statusCode === 403 && 
-            error.message?.includes('You can only send testing emails to your own email address')) {
-          // Extract account owner email from error message
-          const accountOwnerMatch = error.message.match(/your own email address \(([^)]+)\)/);
-          const accountOwnerEmail = accountOwnerMatch ? accountOwnerMatch[1] : process.env.EMAIL_USER;
-          
-          if (accountOwnerEmail && accountOwnerEmail !== userEmail) {
-            console.warn(`⚠️ Resend can only send to account owner. Sending alert to ${accountOwnerEmail} instead of ${userEmail}`);
-            
-            // Modify subject to indicate forwarding
-            const forwardedSubject = `[Forwarded to ${accountOwnerEmail}] ${subject}`;
-            const forwardedHtml = html.replace(
-              `<p>Hi <strong>${userName}</strong>,</p>`,
-              `<p>Hi <strong>${accountOwnerEmail}</strong>,</p>
-               <p style="background-color: #fff3cd; padding: 10px; border-radius: 4px; margin: 10px 0;">
-                 <strong>Note:</strong> This budget alert was originally intended for <strong>${userEmail}</strong> (${userName}), 
-                 but Resend requires a verified domain to send to external recipients. 
-                 This alert is being forwarded to the account owner email.
-               </p>
-               <p>Hi <strong>${userName}</strong> (${userEmail}),</p>`
-            );
-            
-            try {
-              const forwardedResult = await resendClient.emails.send({
-                from: `Finance Manager <${fromEmail}>`,
-                to: accountOwnerEmail,
-                subject: forwardedSubject,
-                html: forwardedHtml,
-              });
-              
-              if (forwardedResult.data) {
-                console.log(`✅ Budget alert forwarded to account owner ${accountOwnerEmail} via Resend:`, forwardedResult.data.id);
-                return { success: true, messageId: forwardedResult.data.id, forwarded: true };
-              }
-            } catch (forwardError) {
-              console.error('❌ Failed to forward email to account owner:', forwardError.message);
-            }
-          }
-          
-          // If forwarding failed or same email, try Gmail SMTP fallback
-          console.warn('⚠️ Attempting Gmail SMTP fallback...');
-          if (process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD) {
-            fromEmail = process.env.EMAIL_USER;
-            // Continue to Gmail SMTP fallback below
-          } else {
-            return { success: false, error: error.message };
-          }
-        } else {
-          return { success: false, error: error.message };
-        }
+        console.error('❌ Error sending email via Mailjet:', error.message);
+        // Fall through to SMTP fallback
       }
     }
 
@@ -507,26 +426,22 @@ const sendBudgetAlertEmail = async (userEmail, userName, budgetData, retries = 2
 const testEmailConfiguration = async () => {
   try {
     const hasEmailService = 
+      process.env.MAILJET_API_KEY ||
       process.env.BREVO_API_KEY ||
       process.env.SENDGRID_API_KEY || 
-      process.env.RESEND_API_KEY || 
       (process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD);
 
     if (!hasEmailService) {
       return { success: false, message: 'Email credentials not configured' };
     }
 
-    // Test Resend (if configured)
-    if (process.env.RESEND_API_KEY && resendClient) {
-      // Resend doesn't have a verify method, but we can check if client is initialized
-      const senderEmail = process.env.RESEND_SENDER_EMAIL || process.env.SENDER_EMAIL;
+    // Test Mailjet (if configured) - API-based, no connection test needed
+    if (process.env.MAILJET_API_KEY && process.env.MAILJET_API_SECRET) {
+      const senderEmail = process.env.MAILJET_SENDER_EMAIL || process.env.SENDER_EMAIL || process.env.EMAIL_USER;
       if (!senderEmail) {
-        return { success: false, message: 'RESEND_SENDER_EMAIL or SENDER_EMAIL must be set for Resend' };
+        return { success: false, message: 'MAILJET_SENDER_EMAIL, SENDER_EMAIL, or EMAIL_USER must be set for Mailjet' };
       }
-      if (senderEmail.includes('@gmail.com')) {
-        return { success: false, message: 'Cannot use Gmail address with Resend. Please use a verified sender email.' };
-      }
-      return { success: true, message: 'Resend email configuration is valid' };
+      return { success: true, message: 'Mailjet email configuration is valid' };
     }
 
     // Test Brevo, SendGrid, or Gmail via nodemailer
