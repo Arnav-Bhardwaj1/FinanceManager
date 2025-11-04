@@ -76,6 +76,7 @@ mongoose.connect(MONGODB_URI)
       // Schedule budget notification checks
       // Runs every 6 hours (at 00:00, 06:00, 12:00, 18:00)
       const hasEmailService = 
+        process.env.BREVO_API_KEY ||
         process.env.SENDGRID_API_KEY || 
         process.env.RESEND_API_KEY || 
         (process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD);

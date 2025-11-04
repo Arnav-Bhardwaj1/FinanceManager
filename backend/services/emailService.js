@@ -9,6 +9,23 @@ if (process.env.RESEND_API_KEY) {
 
 // Create transporter for Gmail SMTP with production-ready settings
 const createTransporter = () => {
+  // Check if we should use Brevo (Sendinblue) - Free tier: 300 emails/day
+  if (process.env.BREVO_API_KEY) {
+    return nodemailer.createTransport({
+      host: 'smtp-relay.brevo.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.BREVO_SMTP_USER || process.env.EMAIL_USER,
+        pass: process.env.BREVO_API_KEY,
+      },
+      connectionTimeout: 30000,
+      greetingTimeout: 30000,
+      socketTimeout: 30000,
+      debug: process.env.NODE_ENV === 'development',
+    });
+  }
+
   // Check if we should use SendGrid (production email service)
   if (process.env.SENDGRID_API_KEY) {
     return nodemailer.createTransport({
@@ -254,6 +271,7 @@ const sendBudgetAlertEmail = async (userEmail, userName, budgetData, retries = 2
   try {
     // Check if any email service is configured
     const hasEmailService = 
+      process.env.BREVO_API_KEY ||
       process.env.SENDGRID_API_KEY || 
       process.env.RESEND_API_KEY || 
       (process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD);
@@ -263,9 +281,16 @@ const sendBudgetAlertEmail = async (userEmail, userName, budgetData, retries = 2
       return { success: false, message: 'Email service not configured' };
     }
 
-    // Determine sender email
+    // Determine sender email (priority: Brevo > SendGrid > Resend > Gmail)
     let fromEmail;
-    if (process.env.RESEND_API_KEY) {
+    if (process.env.BREVO_API_KEY) {
+      // For Brevo, use verified sender email (can be Gmail)
+      fromEmail = process.env.BREVO_SENDER_EMAIL || process.env.SENDER_EMAIL || process.env.EMAIL_USER;
+      if (!fromEmail) {
+        console.error('❌ BREVO_SENDER_EMAIL, SENDER_EMAIL, or EMAIL_USER must be set for Brevo');
+        return { success: false, message: 'Sender email not configured for Brevo' };
+      }
+    } else if (process.env.RESEND_API_KEY) {
       // For Resend, MUST use a verified sender email (NOT Gmail)
       // Priority: RESEND_SENDER_EMAIL > SENDER_EMAIL > EMAIL_USER (only if not Gmail)
       fromEmail = process.env.RESEND_SENDER_EMAIL || process.env.SENDER_EMAIL;
@@ -320,12 +345,48 @@ const sendBudgetAlertEmail = async (userEmail, userName, budgetData, retries = 2
           console.error('❌ Resend API error:', result.error);
           
           // If Resend fails due to unverified domain (can only send to account owner),
-          // fall back to Gmail SMTP if available
+          // send to account owner email instead (using Resend test sender)
           if (result.error?.statusCode === 403 && 
               result.error?.message?.includes('You can only send testing emails to your own email address')) {
-            console.warn('⚠️ Resend requires verified domain. Falling back to Gmail SMTP...');
+            // Extract account owner email from error message
+            const accountOwnerMatch = result.error.message.match(/your own email address \(([^)]+)\)/);
+            const accountOwnerEmail = accountOwnerMatch ? accountOwnerMatch[1] : process.env.EMAIL_USER;
             
-            // Update fromEmail to Gmail for fallback
+            if (accountOwnerEmail && accountOwnerEmail !== userEmail) {
+              console.warn(`⚠️ Resend can only send to account owner. Sending alert to ${accountOwnerEmail} instead of ${userEmail}`);
+              
+              // Modify subject to indicate forwarding
+              const forwardedSubject = `[Forwarded to ${accountOwnerEmail}] ${subject}`;
+              const forwardedHtml = html.replace(
+                `<p>Hi <strong>${userName}</strong>,</p>`,
+                `<p>Hi <strong>${accountOwnerEmail}</strong>,</p>
+                 <p style="background-color: #fff3cd; padding: 10px; border-radius: 4px; margin: 10px 0;">
+                   <strong>Note:</strong> This budget alert was originally intended for <strong>${userEmail}</strong> (${userName}), 
+                   but Resend requires a verified domain to send to external recipients. 
+                   This alert is being forwarded to the account owner email.
+                 </p>
+                 <p>Hi <strong>${userName}</strong> (${userEmail}),</p>`
+              );
+              
+              try {
+                const forwardedResult = await resendClient.emails.send({
+                  from: `Finance Manager <${fromEmail}>`,
+                  to: accountOwnerEmail,
+                  subject: forwardedSubject,
+                  html: forwardedHtml,
+                });
+                
+                if (forwardedResult.data) {
+                  console.log(`✅ Budget alert forwarded to account owner ${accountOwnerEmail} via Resend:`, forwardedResult.data.id);
+                  return { success: true, messageId: forwardedResult.data.id, forwarded: true };
+                }
+              } catch (forwardError) {
+                console.error('❌ Failed to forward email to account owner:', forwardError.message);
+              }
+            }
+            
+            // If forwarding failed or same email, try Gmail SMTP fallback
+            console.warn('⚠️ Attempting Gmail SMTP fallback...');
             if (process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD) {
               fromEmail = process.env.EMAIL_USER;
               // Continue to Gmail SMTP fallback below
@@ -339,12 +400,48 @@ const sendBudgetAlertEmail = async (userEmail, userName, budgetData, retries = 2
       } catch (error) {
         console.error('❌ Error sending email via Resend:', error.message);
         
-        // If Resend fails due to unverified domain, fall back to Gmail SMTP
+        // If Resend fails due to unverified domain, send to account owner email instead
         if (error.statusCode === 403 && 
             error.message?.includes('You can only send testing emails to your own email address')) {
-          console.warn('⚠️ Resend requires verified domain. Falling back to Gmail SMTP...');
+          // Extract account owner email from error message
+          const accountOwnerMatch = error.message.match(/your own email address \(([^)]+)\)/);
+          const accountOwnerEmail = accountOwnerMatch ? accountOwnerMatch[1] : process.env.EMAIL_USER;
           
-          // Update fromEmail to Gmail for fallback
+          if (accountOwnerEmail && accountOwnerEmail !== userEmail) {
+            console.warn(`⚠️ Resend can only send to account owner. Sending alert to ${accountOwnerEmail} instead of ${userEmail}`);
+            
+            // Modify subject to indicate forwarding
+            const forwardedSubject = `[Forwarded to ${accountOwnerEmail}] ${subject}`;
+            const forwardedHtml = html.replace(
+              `<p>Hi <strong>${userName}</strong>,</p>`,
+              `<p>Hi <strong>${accountOwnerEmail}</strong>,</p>
+               <p style="background-color: #fff3cd; padding: 10px; border-radius: 4px; margin: 10px 0;">
+                 <strong>Note:</strong> This budget alert was originally intended for <strong>${userEmail}</strong> (${userName}), 
+                 but Resend requires a verified domain to send to external recipients. 
+                 This alert is being forwarded to the account owner email.
+               </p>
+               <p>Hi <strong>${userName}</strong> (${userEmail}),</p>`
+            );
+            
+            try {
+              const forwardedResult = await resendClient.emails.send({
+                from: `Finance Manager <${fromEmail}>`,
+                to: accountOwnerEmail,
+                subject: forwardedSubject,
+                html: forwardedHtml,
+              });
+              
+              if (forwardedResult.data) {
+                console.log(`✅ Budget alert forwarded to account owner ${accountOwnerEmail} via Resend:`, forwardedResult.data.id);
+                return { success: true, messageId: forwardedResult.data.id, forwarded: true };
+              }
+            } catch (forwardError) {
+              console.error('❌ Failed to forward email to account owner:', forwardError.message);
+            }
+          }
+          
+          // If forwarding failed or same email, try Gmail SMTP fallback
+          console.warn('⚠️ Attempting Gmail SMTP fallback...');
           if (process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD) {
             fromEmail = process.env.EMAIL_USER;
             // Continue to Gmail SMTP fallback below
@@ -410,6 +507,7 @@ const sendBudgetAlertEmail = async (userEmail, userName, budgetData, retries = 2
 const testEmailConfiguration = async () => {
   try {
     const hasEmailService = 
+      process.env.BREVO_API_KEY ||
       process.env.SENDGRID_API_KEY || 
       process.env.RESEND_API_KEY || 
       (process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD);
@@ -431,7 +529,7 @@ const testEmailConfiguration = async () => {
       return { success: true, message: 'Resend email configuration is valid' };
     }
 
-    // Test SendGrid or Gmail via nodemailer
+    // Test Brevo, SendGrid, or Gmail via nodemailer
     const transporter = createTransporter();
     
     // Verify connection with timeout
@@ -442,7 +540,12 @@ const testEmailConfiguration = async () => {
       )
     ]);
 
-    const serviceType = process.env.SENDGRID_API_KEY ? 'SendGrid' : 'Gmail';
+    let serviceType = 'Gmail';
+    if (process.env.BREVO_API_KEY) {
+      serviceType = 'Brevo';
+    } else if (process.env.SENDGRID_API_KEY) {
+      serviceType = 'SendGrid';
+    }
     
     return { success: true, message: `${serviceType} email configuration is valid` };
   } catch (error) {
