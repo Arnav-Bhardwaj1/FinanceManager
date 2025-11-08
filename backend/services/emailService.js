@@ -468,7 +468,240 @@ const testEmailConfiguration = async () => {
   }
 };
 
+// Email template for password reset
+const getPasswordResetEmailTemplate = (userName, resetUrl) => {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 20px;
+          background-color: #f5f5f5;
+        }
+        .container {
+          background-color: #ffffff;
+          border-radius: 12px;
+          padding: 30px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .header {
+          background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+          color: white;
+          padding: 20px;
+          border-radius: 8px;
+          text-align: center;
+          margin-bottom: 25px;
+        }
+        .header h1 {
+          margin: 0;
+          font-size: 24px;
+          font-weight: 700;
+        }
+        .content {
+          margin: 20px 0;
+        }
+        .cta-button {
+          display: inline-block;
+          background-color: #2196f3;
+          color: white;
+          padding: 14px 28px;
+          text-decoration: none;
+          border-radius: 6px;
+          font-weight: 600;
+          margin: 20px 0;
+          text-align: center;
+        }
+        .cta-button:hover {
+          background-color: #1976d2;
+        }
+        .button-container {
+          text-align: center;
+          margin: 30px 0;
+        }
+        .footer {
+          margin-top: 30px;
+          padding-top: 20px;
+          border-top: 1px solid #e0e0e0;
+          text-align: center;
+          color: #666;
+          font-size: 12px;
+        }
+        .warning {
+          background-color: #fff3cd;
+          border-left: 4px solid #ffc107;
+          padding: 12px;
+          margin: 20px 0;
+          border-radius: 4px;
+          font-size: 14px;
+        }
+        .reset-link {
+          word-break: break-all;
+          color: #2196f3;
+          font-size: 12px;
+          margin-top: 20px;
+          padding: 10px;
+          background-color: #f5f5f5;
+          border-radius: 4px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🔐 Password Reset Request</h1>
+        </div>
+        
+        <div class="content">
+          <p>Hi <strong>${userName}</strong>,</p>
+          
+          <p>We received a request to reset your password for your Finance Manager account.</p>
+          
+          <p>Click the button below to reset your password:</p>
+          
+          <div class="button-container">
+            <a href="${resetUrl}" class="cta-button">Reset Password</a>
+          </div>
+          
+          <p>Or copy and paste this link into your browser:</p>
+          <div class="reset-link">${resetUrl}</div>
+          
+          <div class="warning">
+            <strong>⚠️ Important:</strong> This link will expire in 1 hour. If you didn't request a password reset, please ignore this email and your password will remain unchanged.
+          </div>
+          
+          <p>If you continue to have problems, please contact our support team.</p>
+        </div>
+        
+        <div class="footer">
+          <p>This is an automated email from Finance Manager.</p>
+          <p>Please do not reply to this email.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+};
+
+// Send password reset email
+const sendPasswordResetEmail = async (userEmail, userName, resetUrl, retries = 2) => {
+  try {
+    // Check if any email service is configured
+    const hasEmailService = 
+      process.env.MAILJET_API_KEY ||
+      process.env.BREVO_API_KEY ||
+      process.env.SENDGRID_API_KEY || 
+      (process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD);
+
+    if (!hasEmailService) {
+      console.warn('Email service not configured. Skipping password reset email.');
+      return { success: false, message: 'Email service not configured' };
+    }
+
+    // Determine sender email (priority: Mailjet > Brevo > SendGrid > Gmail)
+    let fromEmail;
+    let fromName = 'Finance Manager';
+    
+    if (process.env.MAILJET_API_KEY) {
+      fromEmail = process.env.MAILJET_SENDER_EMAIL || process.env.SENDER_EMAIL || process.env.EMAIL_USER;
+      if (!fromEmail) {
+        console.error('❌ MAILJET_SENDER_EMAIL, SENDER_EMAIL, or EMAIL_USER must be set for Mailjet');
+        return { success: false, message: 'Sender email not configured for Mailjet' };
+      }
+    } else if (process.env.BREVO_API_KEY) {
+      fromEmail = process.env.BREVO_SENDER_EMAIL || process.env.SENDER_EMAIL || process.env.EMAIL_USER;
+      if (!fromEmail) {
+        console.error('❌ BREVO_SENDER_EMAIL, SENDER_EMAIL, or EMAIL_USER must be set for Brevo');
+        return { success: false, message: 'Sender email not configured for Brevo' };
+      }
+    } else if (process.env.SENDGRID_API_KEY) {
+      fromEmail = process.env.SENDER_EMAIL || process.env.EMAIL_USER;
+      if (!fromEmail) {
+        console.error('❌ SENDER_EMAIL or EMAIL_USER must be set for SendGrid');
+        return { success: false, message: 'SENDER_EMAIL or EMAIL_USER not configured' };
+      }
+    } else {
+      fromEmail = process.env.EMAIL_USER;
+    }
+
+    const subject = '🔐 Reset Your Password - Finance Manager';
+    const html = getPasswordResetEmailTemplate(userName, resetUrl);
+
+    // Use Mailjet API if available (HTTP-based, works on Render)
+    if (process.env.MAILJET_API_KEY && process.env.MAILJET_API_SECRET) {
+      try {
+        const result = await sendViaMailjet(userEmail, fromEmail, fromName, subject, html);
+        
+        if (result.success) {
+          console.log('✅ Password reset email sent via Mailjet:', result.messageId);
+          return result;
+        } else {
+          console.error('❌ Mailjet API error:', result.error);
+          // Fall through to SMTP fallback
+        }
+      } catch (error) {
+        console.error('❌ Error sending email via Mailjet:', error.message);
+        // Fall through to SMTP fallback
+      }
+    }
+
+    // Use SendGrid or Gmail via nodemailer
+    const transporter = createTransporter();
+    const mailOptions = {
+      from: `"Finance Manager" <${fromEmail}>`,
+      to: userEmail,
+      subject: subject,
+      html: html,
+    };
+
+    // Retry logic for connection issues
+    let lastError;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const info = await transporter.sendMail(mailOptions);
+        console.log('✅ Password reset email sent:', info.messageId);
+        return { success: true, messageId: info.messageId };
+      } catch (error) {
+        lastError = error;
+        
+        // Don't retry on certain errors
+        if (error.code === 'EAUTH' || error.code === 'EENVELOPE') {
+          console.error('❌ Email authentication/envelope error, not retrying:', error.message);
+          break;
+        }
+
+        // Retry on connection/timeout errors
+        if (error.code === 'ETIMEDOUT' || error.code === 'ECONNRESET') {
+          if (attempt < retries) {
+            const delay = (attempt + 1) * 2000; // Exponential backoff: 2s, 4s
+            console.warn(`⚠️ Email send failed (attempt ${attempt + 1}/${retries + 1}), retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+        }
+
+        // If not a retryable error or out of retries, break
+        break;
+      }
+    }
+
+    // All retries failed
+    console.error('❌ Failed to send password reset email after retries:', lastError?.message || lastError);
+    return { success: false, error: lastError?.message || 'Unknown error', code: lastError?.code };
+  } catch (error) {
+    console.error('❌ Error in sendPasswordResetEmail:', error);
+    return { success: false, error: error.message, code: error.code };
+  }
+};
+
 module.exports = {
   sendBudgetAlertEmail,
+  sendPasswordResetEmail,
   testEmailConfiguration,
 };

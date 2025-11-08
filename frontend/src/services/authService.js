@@ -41,3 +41,21 @@ export const isAuthenticated = () => {
   const user = getCurrentUser();
   return !!(token && user);
 };
+
+export const forgotPassword = async (email) => {
+  try {
+    const response = await axios.post(`${API_URL}/forgot-password`, { email });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : { message: 'Network error' };
+  }
+};
+
+export const resetPassword = async (token, password) => {
+  try {
+    const response = await axios.post(`${API_URL}/reset-password`, { token, password });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : { message: 'Network error' };
+  }
+};

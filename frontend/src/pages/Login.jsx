@@ -215,7 +215,7 @@ const Login = () => {
                 />
               </Box>
 
-              <Box sx={{ mb: 4 }}>
+              <Box sx={{ mb: 2 }}>
             <TextField
                   fullWidth
               required
@@ -259,6 +259,26 @@ const Login = () => {
                     },
                   }}
                 />
+              </Box>
+
+              {/* Forgot Password Link */}
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
+                <Link to="/forgot-password" style={{ textDecoration: 'none' }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: theme.palette.primary.main,
+                      fontWeight: 500,
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        color: theme.palette.primary.dark,
+                        textDecoration: 'underline',
+                      },
+                    }}
+                  >
+                    Forgot Password?
+                  </Typography>
+                </Link>
               </Box>
 
             <Button

@@ -7,6 +7,8 @@ import Register from './pages/Register';
 import SavingsGoals from './pages/SavingsGoals';
 import Budgets from './pages/Budgets';
 import GoogleAuthSuccess from './pages/GoogleAuthSuccess';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import { useAuth } from './context/AuthContext';
 
 const PrivateRoute = ({ children }) => {
@@ -31,6 +33,14 @@ const AppRoutes = () => {
       <Route 
         path="/register" 
         element={user ? <Navigate to="/analytics" /> : <Register />} 
+      />
+      <Route 
+        path="/forgot-password" 
+        element={user ? <Navigate to="/analytics" /> : <ForgotPassword />} 
+      />
+      <Route 
+        path="/reset-password" 
+        element={user ? <Navigate to="/analytics" /> : <ResetPassword />} 
       />
       
       <Route 

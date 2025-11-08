@@ -4,9 +4,11 @@ const passport = require('passport');
 const authController = require('../controllers/authController');
 const authMiddleware = require('../middleware/authMiddleware');
 
-// Existing routes
+// Existing routes 
 router.post('/register', authController.register);
 router.post('/login', authController.login);
+router.post('/forgot-password', authController.forgotPassword);
+router.post('/reset-password', authController.resetPassword);
 
 // Google OAuth routes
 router.get('/google', passport.authenticate('google', {

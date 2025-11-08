@@ -34,6 +34,14 @@ const userSchema = new mongoose.Schema({
     enum: ['local', 'google'],
     default: 'local'
   },
+  resetPasswordToken: {
+    type: String,
+    default: undefined
+  },
+  resetPasswordExpires: {
+    type: Date,
+    default: undefined
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -62,6 +70,29 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
   } catch (error) {
     throw new Error('Error comparing passwords');
   }
+};
+
+// Method to generate password reset token
+userSchema.methods.generatePasswordResetToken = function() {
+  const crypto = require('crypto');
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  
+  // Hash the token and save to database
+  this.resetPasswordToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+  
+  // Set expiration to 1 hour from now
+  this.resetPasswordExpires = Date.now() + 60 * 60 * 1000;
+  
+  return resetToken;
+};
+
+// Method to clear password reset token
+userSchema.methods.clearPasswordResetToken = function() {
+  this.resetPasswordToken = undefined;
+  this.resetPasswordExpires = undefined;
 };
 
 // Handle duplicate key errors

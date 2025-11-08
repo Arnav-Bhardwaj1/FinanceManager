@@ -1,5 +1,7 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const User = require('../models/User');
+const { sendPasswordResetEmail } = require('../services/emailService');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -160,6 +162,127 @@ exports.login = async (req, res) => {
     console.error('Login error:', error);
     res.status(500).json({
       message: 'Error logging in',
+      error: error.message
+    });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Validate input
+    if (!email) {
+      return res.status(400).json({
+        message: 'Please provide an email address'
+      });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email });
+
+    // Always return success message for security (don't reveal if email exists)
+    if (!user) {
+      return res.json({
+        message: 'If an account with that email exists, a password reset link has been sent.'
+      });
+    }
+
+    // Check if user has a local account (not Google OAuth only)
+    if (user.provider !== 'local' || !user.password) {
+      return res.json({
+        message: 'If an account with that email exists, a password reset link has been sent.'
+      });
+    }
+
+    // Generate reset token
+    const resetToken = user.generatePasswordResetToken();
+    await user.save({ validateBeforeSave: false });
+
+    // Send password reset email
+    try {
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
+      
+      await sendPasswordResetEmail(user.email, user.name, resetUrl);
+
+      res.json({
+        message: 'If an account with that email exists, a password reset link has been sent.'
+      });
+    } catch (error) {
+      // If email fails, clear the reset token
+      user.clearPasswordResetToken();
+      await user.save({ validateBeforeSave: false });
+
+      console.error('Error sending password reset email:', error);
+      return res.status(500).json({
+        message: 'Error sending password reset email. Please try again later.'
+      });
+    }
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({
+      message: 'Error processing password reset request',
+      error: error.message
+    });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    // Validate input
+    if (!token || !password) {
+      return res.status(400).json({
+        message: 'Please provide reset token and new password'
+      });
+    }
+
+    // Validate password length
+    if (password.length < 6) {
+      return res.status(400).json({
+        message: 'Password must be at least 6 characters long'
+      });
+    }
+
+    // Hash the token to compare with stored token
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+
+    // Find user with valid reset token
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        message: 'Invalid or expired password reset token'
+      });
+    }
+
+    // Check if user has a local account
+    if (user.provider !== 'local') {
+      return res.status(400).json({
+        message: 'This account uses Google authentication. Please use Google to sign in.'
+      });
+    }
+
+    // Set new password
+    user.password = password;
+    user.clearPasswordResetToken();
+    await user.save();
+
+    res.json({
+      message: 'Password has been reset successfully'
+    });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({
+      message: 'Error resetting password',
       error: error.message
     });
   }
