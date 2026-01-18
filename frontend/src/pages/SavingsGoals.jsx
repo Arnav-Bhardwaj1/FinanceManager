@@ -902,16 +902,44 @@ const SavingsGoals = () => {
         onClose={handleCloseGoalDialog} 
         maxWidth="sm" 
         fullWidth
+        BackdropProps={{
+          sx: {
+            backdropFilter: 'blur(4px)',
+            backgroundColor: theme => theme.palette.mode === 'dark'
+              ? 'rgba(0, 0, 0, 0.6)'
+              : 'rgba(0, 0, 0, 0.4)',
+          },
+        }}
         PaperProps={{
           sx: {
             borderRadius: 3,
             background: theme => theme.palette.mode === 'dark'
-              ? 'rgba(30, 30, 30, 0.95)'
-              : 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
-              border: '1px solid',
-              borderColor: 'divider',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+              ? 'linear-gradient(135deg, rgba(30, 30, 30, 0.7), rgba(40, 40, 40, 0.6))'
+              : 'linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(250, 250, 250, 0.6))',
+            backdropFilter: 'blur(40px) saturate(200%)',
+            border: '1px solid',
+            borderColor: theme => theme.palette.mode === 'dark'
+              ? 'rgba(255, 255, 255, 0.18)'
+              : 'rgba(0, 0, 0, 0.15)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+            position: 'relative',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              borderRadius: 'inherit',
+              padding: '1px',
+              background: theme => theme.palette.mode === 'dark'
+                ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))'
+                : 'linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4))',
+              WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+              WebkitMaskComposite: 'xor',
+              maskComposite: 'exclude',
+              pointerEvents: 'none',
+            },
           },
         }}
       >
@@ -939,6 +967,17 @@ const SavingsGoals = () => {
               label="Goal Title"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              placeholder="Enter goal title"
+              InputLabelProps={{
+                shrink: true,
+                sx: {
+                  color: 'text.primary',
+                  fontWeight: 500,
+                  '&.Mui-focused': {
+                    color: 'primary.main',
+                  },
+                },
+              }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -969,6 +1008,7 @@ const SavingsGoals = () => {
               label="Target Amount"
               value={formData.targetAmount}
               onChange={(e) => setFormData({ ...formData, targetAmount: e.target.value })}
+              placeholder="Enter target amount"
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -999,6 +1039,16 @@ const SavingsGoals = () => {
               label="Category"
               value={formData.category}
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              InputLabelProps={{
+                shrink: true,
+                sx: {
+                  color: 'text.primary',
+                  fontWeight: 500,
+                  '&.Mui-focused': {
+                    color: 'primary.main',
+                  },
+                },
+              }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -1066,6 +1116,17 @@ const SavingsGoals = () => {
               label="Description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Enter goal description"
+              InputLabelProps={{
+                shrink: true,
+                sx: {
+                  color: 'text.primary',
+                  fontWeight: 500,
+                  '&.Mui-focused': {
+                    color: 'primary.main',
+                  },
+                },
+              }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -1128,16 +1189,44 @@ const SavingsGoals = () => {
       <Dialog 
         open={openContributionDialog} 
         onClose={handleCloseContributionDialog}
+        BackdropProps={{
+          sx: {
+            backdropFilter: 'blur(4px)',
+            backgroundColor: theme => theme.palette.mode === 'dark'
+              ? 'rgba(0, 0, 0, 0.6)'
+              : 'rgba(0, 0, 0, 0.4)',
+          },
+        }}
         PaperProps={{
           sx: {
             borderRadius: 3,
             background: theme => theme.palette.mode === 'dark'
-              ? 'rgba(30, 30, 30, 0.95)'
-              : 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
+              ? 'linear-gradient(135deg, rgba(30, 30, 30, 0.7), rgba(40, 40, 40, 0.6))'
+              : 'linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(250, 250, 250, 0.6))',
+            backdropFilter: 'blur(40px) saturate(200%)',
             border: '1px solid',
-            borderColor: 'divider',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+            borderColor: theme => theme.palette.mode === 'dark'
+              ? 'rgba(255, 255, 255, 0.18)'
+              : 'rgba(0, 0, 0, 0.15)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+            position: 'relative',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              borderRadius: 'inherit',
+              padding: '1px',
+              background: theme => theme.palette.mode === 'dark'
+                ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))'
+                : 'linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4))',
+              WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+              WebkitMaskComposite: 'xor',
+              maskComposite: 'exclude',
+              pointerEvents: 'none',
+            },
           },
         }}
       >
@@ -1174,6 +1263,7 @@ const SavingsGoals = () => {
                 min: "0", 
                 step: "0.01" 
               }}
+              placeholder="Enter contribution amount"
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -1208,6 +1298,7 @@ const SavingsGoals = () => {
                 ...contributionData, 
                 note: e.target.value 
               })}
+              placeholder="Add a note (optional)"
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -1285,16 +1376,44 @@ const ContributionHistoryDialog = ({ open, onClose, goal }) => {
       onClose={onClose}
       maxWidth="md"
       fullWidth
+      BackdropProps={{
+        sx: {
+          backdropFilter: 'blur(4px)',
+          backgroundColor: theme => theme.palette.mode === 'dark'
+            ? 'rgba(0, 0, 0, 0.6)'
+            : 'rgba(0, 0, 0, 0.4)',
+        },
+      }}
       PaperProps={{
         sx: {
           borderRadius: 3,
           background: theme => theme.palette.mode === 'dark'
-            ? 'rgba(30, 30, 30, 0.95)'
-            : 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(20px)',
-            border: '1px solid',
-            borderColor: 'divider',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+            ? 'linear-gradient(135deg, rgba(30, 30, 30, 0.7), rgba(40, 40, 40, 0.6))'
+            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(250, 250, 250, 0.6))',
+          backdropFilter: 'blur(40px) saturate(200%)',
+          border: '1px solid',
+          borderColor: theme => theme.palette.mode === 'dark'
+            ? 'rgba(255, 255, 255, 0.18)'
+            : 'rgba(0, 0, 0, 0.15)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+          position: 'relative',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            borderRadius: 'inherit',
+            padding: '1px',
+            background: theme => theme.palette.mode === 'dark'
+              ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))'
+              : 'linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4))',
+            WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+            WebkitMaskComposite: 'xor',
+            maskComposite: 'exclude',
+            pointerEvents: 'none',
+          },
         },
       }}
     >

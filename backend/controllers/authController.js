@@ -204,8 +204,28 @@ exports.forgotPassword = async (req, res) => {
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
       const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
       
-      await sendPasswordResetEmail(user.email, user.name, resetUrl);
+      console.log('📧 Attempting to send PASSWORD RESET email to:', user.email);
+      console.log('📧 Reset URL:', resetUrl);
+      console.log('📧 User name:', user.name);
+      
+      const emailResult = await sendPasswordResetEmail(user.email, user.name, resetUrl);
 
+      // Check if email was actually sent
+      if (!emailResult || !emailResult.success) {
+        // If email fails, clear the reset token
+        user.clearPasswordResetToken();
+        await user.save({ validateBeforeSave: false });
+
+        console.error('❌ Failed to send password reset email:', emailResult?.error || emailResult?.message || 'Unknown error');
+        console.error('Email service response:', emailResult);
+        
+        // Still return success message for security (don't reveal email issues)
+        return res.json({
+          message: 'If an account with that email exists, a password reset link has been sent.'
+        });
+      }
+
+      console.log('✅ Password reset email sent successfully to:', user.email);
       res.json({
         message: 'If an account with that email exists, a password reset link has been sent.'
       });
@@ -214,9 +234,16 @@ exports.forgotPassword = async (req, res) => {
       user.clearPasswordResetToken();
       await user.save({ validateBeforeSave: false });
 
-      console.error('Error sending password reset email:', error);
-      return res.status(500).json({
-        message: 'Error sending password reset email. Please try again later.'
+      console.error('❌ Error sending password reset email:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
+      
+      // Still return success message for security (don't reveal email issues)
+      return res.json({
+        message: 'If an account with that email exists, a password reset link has been sent.'
       });
     }
   } catch (error) {

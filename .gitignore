@@ -26,6 +26,7 @@ coverage/
 # Documentation
 DOCKER.md
 TESTING.md
+MAILJET_SETUP.md
 
 # Debug logs
 npm-debug.log*

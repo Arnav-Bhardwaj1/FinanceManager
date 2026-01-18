@@ -350,10 +350,15 @@ const sendBudgetAlertEmail = async (userEmail, userName, budgetData, retries = 2
     }
 
     const subject = `🚨 Budget Alert: ${budgetData.category} - ${budgetData.isExceeded ? 'Exceeded' : 'Warning'}`;
+    console.log('📧 [BUDGET ALERT] Preparing email with subject:', subject);
+    console.log('📧 [BUDGET ALERT] To:', userEmail);
+    console.log('📧 [BUDGET ALERT] Category:', budgetData.category);
+    
     const html = getBudgetAlertEmailTemplate({
       ...budgetData,
       userName,
     });
+    console.log('📧 [BUDGET ALERT] Email template generated, length:', html.length);
 
     // Use Mailjet API if available (HTTP-based, works on Render)
     if (process.env.MAILJET_API_KEY && process.env.MAILJET_API_SECRET) {
@@ -361,7 +366,9 @@ const sendBudgetAlertEmail = async (userEmail, userName, budgetData, retries = 2
         const result = await sendViaMailjet(userEmail, fromEmail, fromName, subject, html);
         
         if (result.success) {
-          console.log('✅ Budget alert email sent via Mailjet:', result.messageId);
+          console.log('✅ [BUDGET ALERT] Email sent via Mailjet!');
+          console.log('✅ [BUDGET ALERT] Message ID:', result.messageId);
+          console.log('✅ [BUDGET ALERT] Subject:', subject);
           return result;
         } else {
           console.error('❌ Mailjet API error:', result.error);
@@ -387,7 +394,9 @@ const sendBudgetAlertEmail = async (userEmail, userName, budgetData, retries = 2
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         const info = await transporter.sendMail(mailOptions);
-        console.log('✅ Budget alert email sent:', info.messageId);
+        console.log('✅ [BUDGET ALERT] Email sent successfully!');
+        console.log('✅ [BUDGET ALERT] Message ID:', info.messageId);
+        console.log('✅ [BUDGET ALERT] Subject:', subject);
         return { success: true, messageId: info.messageId };
       } catch (error) {
         lastError = error;
@@ -631,7 +640,12 @@ const sendPasswordResetEmail = async (userEmail, userName, resetUrl, retries = 2
     }
 
     const subject = '🔐 Reset Your Password - Finance Manager';
+    console.log('📧 [PASSWORD RESET] Preparing email with subject:', subject);
+    console.log('📧 [PASSWORD RESET] To:', userEmail);
+    console.log('📧 [PASSWORD RESET] From:', fromEmail);
+    
     const html = getPasswordResetEmailTemplate(userName, resetUrl);
+    console.log('📧 [PASSWORD RESET] Email template generated, length:', html.length);
 
     // Use Mailjet API if available (HTTP-based, works on Render)
     if (process.env.MAILJET_API_KEY && process.env.MAILJET_API_SECRET) {
@@ -639,7 +653,9 @@ const sendPasswordResetEmail = async (userEmail, userName, resetUrl, retries = 2
         const result = await sendViaMailjet(userEmail, fromEmail, fromName, subject, html);
         
         if (result.success) {
-          console.log('✅ Password reset email sent via Mailjet:', result.messageId);
+          console.log('✅ [PASSWORD RESET] Email sent via Mailjet!');
+          console.log('✅ [PASSWORD RESET] Message ID:', result.messageId);
+          console.log('✅ [PASSWORD RESET] Subject:', subject);
           return result;
         } else {
           console.error('❌ Mailjet API error:', result.error);
@@ -665,7 +681,9 @@ const sendPasswordResetEmail = async (userEmail, userName, resetUrl, retries = 2
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         const info = await transporter.sendMail(mailOptions);
-        console.log('✅ Password reset email sent:', info.messageId);
+        console.log('✅ [PASSWORD RESET] Email sent successfully!');
+        console.log('✅ [PASSWORD RESET] Message ID:', info.messageId);
+        console.log('✅ [PASSWORD RESET] Subject:', subject);
         return { success: true, messageId: info.messageId };
       } catch (error) {
         lastError = error;
